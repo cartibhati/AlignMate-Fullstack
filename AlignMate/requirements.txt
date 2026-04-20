@@ -1,0 +1,9 @@
+opencv-python
+mediapipe
+streamlit
+numpy
+joblib
+scikit-learn
+fastapi
+uvicorn
+websockets
