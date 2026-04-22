@@ -46,6 +46,9 @@ async def websocket_endpoint(websocket: WebSocket):
     shoulder_verifier  = None
     recovery_done      = False
     recovery_done_time = None
+    # ✅ FIX: Once an exercise starts, lock the state so it can't flip to
+    # "good" mid-exercise. The user must complete 5 reps (or timeout) first.
+    exercise_locked    = False
 
     # ✅ FIX 1: Use a proper fixed-size deque instead of a plain list.
     # This naturally rolls old values out and is NEVER cleared mid-session,
@@ -140,11 +143,16 @@ async def websocket_endpoint(websocket: WebSocket):
 
             # ── recovery ─────────────────────────────────────
             shoulder_reps = None
-            if state == "bad" and shoulder_issue:
-                if shoulder_verifier is None:
-                    shoulder_verifier = ShoulderRollVerifier(TARGET_SHOULDER_REPS)
-                    recovery_done = False
 
+            # Start exercise only when bad + shoulder issue AND not already running
+            if state == "bad" and shoulder_issue and shoulder_verifier is None and not recovery_done:
+                shoulder_verifier = ShoulderRollVerifier(TARGET_SHOULDER_REPS)
+                exercise_locked   = True   # ✅ lock: state cannot go "good" until done
+                recovery_done     = False
+
+            # ✅ FIX: Run the verifier on EVERY frame while it's active —
+            # regardless of current state. Previously this block only ran when
+            # state=="bad", so sitting straight mid-exercise killed the counter.
             if shoulder_verifier and not recovery_done:
                 completed = shoulder_verifier.update(left_shoulder, right_shoulder)
                 shoulder_reps = {
@@ -155,16 +163,35 @@ async def websocket_endpoint(websocket: WebSocket):
                     recovery_done      = True
                     recovery_done_time = time.time()
                     shoulder_verifier  = None
+                    exercise_locked    = False   # unlock after completion
 
             if recovery_done:
                 if time.time() - recovery_done_time > RECOVERY_MSG_DURATION:
                     recovery_done      = False
                     recovery_done_time = None
+                    exercise_locked    = False
+
+            # ✅ FIX: While exercise is in progress, override state to "bad"
+            # so the frontend keeps showing the exercise UI even if the user
+            # corrects their posture mid-exercise. Without this, state flips to
+            # "good" the moment posture improves and the exercise disappears.
+            if exercise_locked and not recovery_done:
+                state = "bad"
 
             # ── score & feedback ──────────────────────────────
             score = round((1 - bad_prob) * 100)
 
-            if state == "good":
+            if recovery_done:
+                feedback = "Recovery complete! Great job."
+            elif exercise_locked and shoulder_reps:
+                # ✅ FIX: Show exercise progress regardless of posture state.
+                # Previously shoulder_reps was only appended in the state=="bad"
+                # branch, so it vanished the moment posture improved.
+                feedback = (
+                    f"Keep rolling! Shoulder rolls: "
+                    f"{shoulder_reps['count']}/{shoulder_reps['target']}"
+                )
+            elif state == "good":
                 feedback = "Good posture! Keep it up."
             elif state == "drift":
                 feedback = "Posture drifting — sit straight."

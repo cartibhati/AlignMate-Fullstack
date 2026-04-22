@@ -30,6 +30,23 @@ export default function LivePosturePage() {
     setDisplayScore(newScore);
   }, [score]);
 
+  // ── Running average score accumulator ────────────────────────────────────
+  // ✅ FIX: The old code saved analysis.score at the moment "End Session" was
+  // clicked — a single frame's value. If bad_prob happened to be high at that
+  // exact moment (e.g. you leaned over to click the button), the whole session
+  // got a low score even if posture was fine for the previous 2 minutes.
+  // Now we accumulate every score sample and compute a true session average.
+  const scoreSumRef   = useRef(0);
+  const scoreCountRef = useRef(0);
+
+  useEffect(() => {
+    // Only accumulate when we have a real reading (score > 0 = server connected)
+    if (displayScore > 0) {
+      scoreSumRef.current   += displayScore;
+      scoreCountRef.current += 1;
+    }
+  }, [displayScore]);
+
   const normalisedStatus = (rawAnalysis?.status ?? "good").toLowerCase();
 
   const analysis = {
@@ -46,7 +63,6 @@ export default function LivePosturePage() {
     score: displayScore,
   };
 
-  // Keep usePostureTimer for the live alert banner only
   const { duration, isBadPosture, reset } = usePostureTimer(analysis.status);
 
   // ── Total session time ───────────────────────────────────────────────────
@@ -61,10 +77,6 @@ export default function LivePosturePage() {
   }, []);
 
   // ── Accumulated bad posture time ─────────────────────────────────────────
-  // ✅ FIX: Track based on normalisedStatus directly — not isBadPosture.
-  // isBadPosture only flips true after MIN_BAD_DURATION (15s), so short bad
-  // streaks and the entire "drift" phase were silently ignored.
-  // Now we count any frame where status is "bad" OR "drift" as bad posture.
   const accumulatedBadRef = useRef(0);
   const badStreakStartRef  = useRef(null);
   const [totalBadSecs, setTotalBadSecs] = useState(0);
@@ -73,12 +85,10 @@ export default function LivePosturePage() {
 
   useEffect(() => {
     if (isCurrentlyBad) {
-      // Start of a bad streak
       if (badStreakStartRef.current === null) {
         badStreakStartRef.current = Date.now();
       }
     } else {
-      // End of a bad streak — flush to accumulator
       if (badStreakStartRef.current !== null) {
         const streakSecs = Math.floor(
           (Date.now() - badStreakStartRef.current) / 1000
@@ -92,7 +102,6 @@ export default function LivePosturePage() {
 
   // ── End session ──────────────────────────────────────────────────────────
   const handleEndSession = () => {
-    // Close any open bad streak before saving
     let finalBadSecs = accumulatedBadRef.current;
     if (badStreakStartRef.current !== null) {
       finalBadSecs += Math.floor(
@@ -100,11 +109,18 @@ export default function LivePosturePage() {
       );
     }
 
+    // ✅ Use the true running average. Fall back to current display score
+    // only if no samples were accumulated (session ended immediately).
+    const finalAvgScore =
+      scoreCountRef.current > 0
+        ? Math.round(scoreSumRef.current / scoreCountRef.current)
+        : analysis.score;
+
     if (user?.email) {
       saveSession(user.email, {
         duration:    sessionSeconds,
         badDuration: finalBadSecs,
-        score:       analysis.score,
+        score:       finalAvgScore,
         feedback:    analysis.feedback,
       });
     }
@@ -120,6 +136,9 @@ export default function LivePosturePage() {
     sessionStartRef.current   = Date.now();
     accumulatedBadRef.current = 0;
     badStreakStartRef.current  = null;
+    // ✅ Reset score accumulator for the new session
+    scoreSumRef.current        = 0;
+    scoreCountRef.current      = 0;
     setSessionSeconds(0);
     setTotalBadSecs(0);
     reset();
@@ -153,7 +172,6 @@ export default function LivePosturePage() {
           End Session
         </button>
 
-        {/* Alert banner — uses isBadPosture (only for visual alert after 15s) */}
         {isBadPosture && (
           <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm font-medium">
             ⚠️ Bad posture for {duration.toFixed(1)} sec

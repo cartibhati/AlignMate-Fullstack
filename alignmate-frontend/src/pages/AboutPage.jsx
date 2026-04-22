@@ -135,7 +135,7 @@ export default function AboutPage() {
 
             {[ 
               { icon: Eye, title: "Real-Time Feedback", desc: "Instant posture correction while you work." },
-              { icon: Brain, title: "AI-Powered Analysis", desc: "Smart posture detection using AI." },
+              { icon: Brain, title: "Proactive Monitoring", desc: "Tech that spots slouching before the back pain starts." },
               { icon: Target, title: "Habit Building", desc: "Focus on long-term improvement." }
             ].map((item, i) => {
               const Icon = item.icon;
