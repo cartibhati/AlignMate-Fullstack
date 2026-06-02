@@ -1,8 +1,17 @@
 /**
  * src/components/dashboard/SessionCard.jsx
  */
+import { useState } from "react";
+
+const MODE_LABELS = {
+  student: "🎓 Student",
+  athlete: "🏋️ Athlete",
+  both:    "⚡ Both",
+};
 
 export default function SessionCard({ session, index, total }) {
+  const [showAI, setShowAI] = useState(false);
+
   const goodPercent =
     session.duration > 0
       ? Math.max(0, Math.round(
@@ -11,25 +20,19 @@ export default function SessionCard({ session, index, total }) {
       : 100;
 
   const scoreColor =
-    session.avgScore >= 75
-      ? "text-emerald-600"
-      : session.avgScore >= 50
-        ? "text-amber-500"
-        : "text-red-500";
+    session.avgScore >= 75 ? "text-emerald-600"
+    : session.avgScore >= 50 ? "text-amber-500"
+    : "text-red-500";
 
   const scoreBorderColor =
-    session.avgScore >= 75
-      ? "border-emerald-200"
-      : session.avgScore >= 50
-        ? "border-amber-200"
-        : "border-red-200";
+    session.avgScore >= 75 ? "border-emerald-200"
+    : session.avgScore >= 50 ? "border-amber-200"
+    : "border-red-200";
 
   const scoreBg =
-    session.avgScore >= 75
-      ? "bg-emerald-50"
-      : session.avgScore >= 50
-        ? "bg-amber-50"
-        : "bg-red-50";
+    session.avgScore >= 75 ? "bg-emerald-50"
+    : session.avgScore >= 50 ? "bg-amber-50"
+    : "bg-red-50";
 
   const formatDuration = (secs) => {
     if (!secs || secs === 0) return "0s";
@@ -45,26 +48,29 @@ export default function SessionCard({ session, index, total }) {
 
   return (
     <div className={`border ${scoreBorderColor} rounded-2xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200`}>
+
       {/* Header row */}
       <div className="flex justify-between items-start mb-4">
         <div>
           <p className="text-xs font-medium text-gray-400 tracking-wide uppercase mb-0.5">
             Session #{total - index}
+            {session.mode && (
+              <span className="ml-2 normal-case font-normal text-gray-400">
+                · {MODE_LABELS[session.mode] ?? session.mode}
+              </span>
+            )}
           </p>
-          <p className="text-sm font-semibold text-gray-800">
-            {session.date}
-          </p>
+          <p className="text-sm font-semibold text-gray-800">{session.date}</p>
           <p className="text-xs text-gray-400">{session.time}</p>
         </div>
 
-        {/* Score badge */}
         <div className={`${scoreBg} ${scoreBorderColor} border rounded-xl px-4 py-2 text-center min-w-[72px]`}>
           <p className={`text-2xl font-bold ${scoreColor}`}>{session.avgScore}%</p>
           <p className="text-[10px] text-gray-400 font-medium">avg score</p>
         </div>
       </div>
 
-      {/* Progress bar — good vs bad ratio */}
+      {/* Progress bar */}
       <div className="mb-4">
         <div className="flex justify-between text-[10px] text-gray-400 mb-1">
           <span>Posture quality</span>
@@ -99,8 +105,26 @@ export default function SessionCard({ session, index, total }) {
         </div>
       </div>
 
-      {/* Feedback */}
-      {session.feedback?.length > 0 && (
+      {/* ✅ AI Summary — expandable */}
+      {session.aiFeedback && (
+        <div className="mt-3 border-t border-gray-100 pt-3">
+          <button
+            onClick={() => setShowAI((v) => !v)}
+            className="flex items-center gap-1.5 text-xs font-medium text-indigo-500 hover:text-indigo-700 transition"
+          >
+            🤖 AI Coach Summary
+            <span className="text-gray-400">{showAI ? "▲" : "▼"}</span>
+          </button>
+          {showAI && (
+            <p className="text-xs text-gray-600 leading-relaxed mt-2 bg-indigo-50 rounded-xl p-3">
+              {session.aiFeedback}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Regular feedback */}
+      {!session.aiFeedback && session.feedback?.length > 0 && (
         <p className="text-xs text-gray-400 italic mt-3 truncate">
           💬 {Array.isArray(session.feedback)
                 ? session.feedback[0]

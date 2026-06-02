@@ -8,40 +8,39 @@ class ShoulderRollVerifier:
         self.target_reps = target_reps
         self.rep_count = 0
 
-        self.prev_avg_y = None
-        self.phase = "idle"  # idle → up → down
+        self.start_y = None
+        self.phase = "down"  # Start in down phase, waiting for shoulders to go up
 
     def update(self, left_shoulder, right_shoulder):
         """
         Called every frame.
         Returns True when target reps are completed.
         """
-
-        # Dono shoulders ka average Y (noise kam karne ke liye)
+        # Average Y of both shoulders to reduce noise
         avg_y = (left_shoulder[1] + right_shoulder[1]) / 2
 
         # First frame initialization
-        if self.prev_avg_y is None:
-            self.prev_avg_y = avg_y
+        if self.start_y is None:
+            self.start_y = avg_y
             return False
 
-        # Movement detection
-        movement = avg_y - self.prev_avg_y
+        # In MediaPipe, Y is 0 at top, 1 at bottom.
+        # So "shoulders UP" means avg_y decreases (smaller value).
+        # We calculate the upward movement height relative to the initial/rest position.
+        upward_movement = self.start_y - avg_y
 
-        # 🔥 CALIBRATED THRESHOLDS (important)
-        UP_THRESHOLD = -0.015    # shoulders going up
-        DOWN_THRESHOLD = 0.015   # shoulders going down
+        # Stable, robust calibrated thresholds (fraction of screen height)
+        UP_THRESHOLD = 0.035     # shoulders lifted by 3.5% of frame height
+        DOWN_THRESHOLD = 0.015   # shoulders returned to near rest position
 
-        # Phase: shoulders moving UP
-        if movement < UP_THRESHOLD and self.phase in ["idle", "down"]:
-            self.phase = "up"
+        if self.phase == "down":
+            if upward_movement > UP_THRESHOLD:
+                self.phase = "up"
+        elif self.phase == "up":
+            if upward_movement < DOWN_THRESHOLD:
+                self.phase = "down"
+                self.rep_count += 1
 
-        # Phase: shoulders moving DOWN → count rep
-        elif movement > DOWN_THRESHOLD and self.phase == "up":
-            self.phase = "down"
-            self.rep_count += 1
-
-        self.prev_avg_y = avg_y
-
-        # Completion check
+        # Return True when target reps are met
         return self.rep_count >= self.target_reps
+

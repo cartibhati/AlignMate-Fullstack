@@ -1,16 +1,32 @@
+// src/components/layout/Layout.jsx
+import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Navbar from "../common/Navbar";
+import Sidebar from "./Sidebar";
 
-function Layout() {
+export default function Layout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <>
-      <Navbar />
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
 
-      <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto" }}>
-        <Outlet />
+      {/* Sidebar — hidden on mobile unless open, always visible on md+ */}
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+
+      {/* Main area */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+
+        {/* Mobile top bar */}
+        <Navbar onMenuClick={() => setSidebarOpen(true)} />
+
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
       </div>
-    </>
+    </div>
   );
 }
-
-export default Layout;

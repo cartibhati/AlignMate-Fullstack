@@ -5,19 +5,34 @@ import AngleMetrics from "@/components/posture/AngleMetrics";
 import PostureScoreRing from "@/components/posture/PostureScoreRing";
 import usePostureAnalysis from "@/hooks/usePostureAnalysis";
 import usePostureTimer from "@/hooks/usePostureTimer";
+import useVoiceAlert from "@/hooks/useVoiceAlert";
+import useAIFeedback from "@/hooks/useAIFeedback";
 import SessionSummaryModel from "@/components/posture/SessionSummaryModel";
 import ConnectionStatus from "@/components/common/ConnectionStatus";
 import { AuthContext } from "@/context/AuthContext";
 import { saveSession } from "@/services/sessionStorage";
 
+const MODE_STYLES = {
+  student: { bg: "bg-blue-100",   text: "text-blue-700",   label: "🎓 Student" },
+  athlete: { bg: "bg-orange-100", text: "text-orange-700", label: "🏋️ Athlete" },
+  both:    { bg: "bg-purple-100", text: "text-purple-700", label: "⚡ Both"    },
+};
+
 export default function LivePosturePage() {
   const { user } = useContext(AuthContext);
 
+  const [mode] = useState(
+    () => localStorage.getItem("alignmate_mode") || "student"
+  );
+
   const [poseResults, setPoseResults] = useState(null);
-  const [showSummary, setShowSummary]  = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
+
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const { speak, cancel } = useVoiceAlert(mode);
 
   const { data: rawAnalysis, connectionStatus } =
-    usePostureAnalysis(poseResults);
+    usePostureAnalysis(poseResults, mode);
 
   // ── Score smoothing ──────────────────────────────────────────────────────
   const score       = rawAnalysis?.score ?? 0;
@@ -30,17 +45,10 @@ export default function LivePosturePage() {
     setDisplayScore(newScore);
   }, [score]);
 
-  // ── Running average score accumulator ────────────────────────────────────
-  // ✅ FIX: The old code saved analysis.score at the moment "End Session" was
-  // clicked — a single frame's value. If bad_prob happened to be high at that
-  // exact moment (e.g. you leaned over to click the button), the whole session
-  // got a low score even if posture was fine for the previous 2 minutes.
-  // Now we accumulate every score sample and compute a true session average.
   const scoreSumRef   = useRef(0);
   const scoreCountRef = useRef(0);
 
   useEffect(() => {
-    // Only accumulate when we have a real reading (score > 0 = server connected)
     if (displayScore > 0) {
       scoreSumRef.current   += displayScore;
       scoreCountRef.current += 1;
@@ -65,7 +73,11 @@ export default function LivePosturePage() {
 
   const { duration, isBadPosture, reset } = usePostureTimer(analysis.status);
 
-  // ── Total session time ───────────────────────────────────────────────────
+  useEffect(() => {
+    if (voiceEnabled) speak(normalisedStatus);
+  }, [normalisedStatus, voiceEnabled, speak]);
+
+  // ── Session timer ────────────────────────────────────────────────────────
   const sessionStartRef = useRef(Date.now());
   const [sessionSeconds, setSessionSeconds] = useState(0);
 
@@ -76,23 +88,19 @@ export default function LivePosturePage() {
     return () => clearInterval(id);
   }, []);
 
-  // ── Accumulated bad posture time ─────────────────────────────────────────
+  // ── Bad posture accumulator ───────────────────────────────────────────────
   const accumulatedBadRef = useRef(0);
-  const badStreakStartRef  = useRef(null);
+  const badStreakStartRef = useRef(null);
   const [totalBadSecs, setTotalBadSecs] = useState(0);
 
   const isCurrentlyBad = normalisedStatus === "bad" || normalisedStatus === "drift";
 
   useEffect(() => {
     if (isCurrentlyBad) {
-      if (badStreakStartRef.current === null) {
-        badStreakStartRef.current = Date.now();
-      }
+      if (badStreakStartRef.current === null) badStreakStartRef.current = Date.now();
     } else {
       if (badStreakStartRef.current !== null) {
-        const streakSecs = Math.floor(
-          (Date.now() - badStreakStartRef.current) / 1000
-        );
+        const streakSecs = Math.floor((Date.now() - badStreakStartRef.current) / 1000);
         accumulatedBadRef.current += streakSecs;
         badStreakStartRef.current  = null;
         setTotalBadSecs(accumulatedBadRef.current);
@@ -100,17 +108,26 @@ export default function LivePosturePage() {
     }
   }, [isCurrentlyBad]);
 
+  // ── AI Feedback ───────────────────────────────────────────────────────────
+  const { aiFeedback, loading: aiLoading, fetchFeedback } = useAIFeedback({
+    mode,
+    score:           displayScore,
+    badDuration:     totalBadSecs,
+    sessionDuration: sessionSeconds,
+    issues:          rawAnalysis?.issues ?? [],
+    enabled:         connectionStatus === "connected",
+  });
+
   // ── End session ──────────────────────────────────────────────────────────
-  const handleEndSession = () => {
+  const handleEndSession = async () => {
+    cancel();
+    await fetchFeedback();
+
     let finalBadSecs = accumulatedBadRef.current;
     if (badStreakStartRef.current !== null) {
-      finalBadSecs += Math.floor(
-        (Date.now() - badStreakStartRef.current) / 1000
-      );
+      finalBadSecs += Math.floor((Date.now() - badStreakStartRef.current) / 1000);
     }
 
-    // ✅ Use the true running average. Fall back to current display score
-    // only if no samples were accumulated (session ended immediately).
     const finalAvgScore =
       scoreCountRef.current > 0
         ? Math.round(scoreSumRef.current / scoreCountRef.current)
@@ -122,6 +139,8 @@ export default function LivePosturePage() {
         badDuration: finalBadSecs,
         score:       finalAvgScore,
         feedback:    analysis.feedback,
+        aiFeedback,                    // ✅ save AI summary
+        mode,
       });
     }
     setShowSummary(true);
@@ -129,6 +148,7 @@ export default function LivePosturePage() {
 
   // ── New session reset ────────────────────────────────────────────────────
   const handleStartNewSession = () => {
+    cancel();
     setShowSummary(false);
     setPoseResults(null);
     smoothedRef.current       = 0;
@@ -136,7 +156,6 @@ export default function LivePosturePage() {
     sessionStartRef.current   = Date.now();
     accumulatedBadRef.current = 0;
     badStreakStartRef.current  = null;
-    // ✅ Reset score accumulator for the new session
     scoreSumRef.current        = 0;
     scoreCountRef.current      = 0;
     setSessionSeconds(0);
@@ -144,20 +163,16 @@ export default function LivePosturePage() {
     reset();
   };
 
-  const fmt = (s) => {
-    if (s < 60) return `${s}s`;
-    return `${Math.floor(s / 60)}m ${s % 60}s`;
-  };
+  const fmt = (s) => s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+  const modeStyle = MODE_STYLES[mode] || MODE_STYLES.student;
 
   return (
     <div className="h-screen flex bg-gray-50">
 
-      {/* LEFT — camera */}
       <div className="w-2/3 flex items-center justify-center bg-black">
         <CameraFeed onPoseResults={setPoseResults} />
       </div>
 
-      {/* RIGHT — panel */}
       <div className="w-1/3 p-6 flex flex-col gap-6 bg-white border-l overflow-y-auto">
 
         <div className="flex justify-between items-center">
@@ -165,10 +180,21 @@ export default function LivePosturePage() {
           <ConnectionStatus status={connectionStatus} />
         </div>
 
-        <button
-          onClick={handleEndSession}
-          className="bg-black text-white px-3 py-2 rounded"
-        >
+        <div className="flex items-center justify-between">
+          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${modeStyle.bg} ${modeStyle.text}`}>
+            {modeStyle.label} mode
+          </div>
+          <button
+            onClick={() => { if (voiceEnabled) cancel(); setVoiceEnabled((v) => !v); }}
+            className={`text-xs px-3 py-1 rounded-full border transition-all ${
+              voiceEnabled ? "bg-black text-white border-black" : "bg-white text-gray-500 border-gray-300"
+            }`}
+          >
+            {voiceEnabled ? "🔊 Voice On" : "🔇 Voice Off"}
+          </button>
+        </div>
+
+        <button onClick={handleEndSession} className="bg-black text-white px-3 py-2 rounded">
           End Session
         </button>
 
@@ -182,7 +208,18 @@ export default function LivePosturePage() {
         <FeedbackBanner feedback={analysis.feedback} />
         <AngleMetrics metrics={analysis.metrics} />
 
-        {/* Live session stats */}
+        {/* AI Coach panel */}
+        <div className="bg-gray-50 rounded-xl p-4 border">
+          <p className="text-xs font-semibold text-gray-400 mb-1">🤖 AI Coach</p>
+          {aiLoading ? (
+            <p className="text-sm text-gray-400 animate-pulse">Analysing your session...</p>
+          ) : aiFeedback ? (
+            <p className="text-sm text-gray-700 leading-relaxed">{aiFeedback}</p>
+          ) : (
+            <p className="text-sm text-gray-400">AI feedback appears every 30s</p>
+          )}
+        </div>
+
         <div className="grid grid-cols-3 gap-2 text-center text-xs">
           <div className="bg-gray-50 rounded-lg p-2">
             <p className="text-gray-400">Session</p>
@@ -210,6 +247,7 @@ export default function LivePosturePage() {
         badDuration={totalBadSecs}
         score={analysis.score}
         feedback={analysis.feedback}
+        aiFeedback={aiFeedback}
       />
     </div>
   );

@@ -34,7 +34,8 @@ export default function usePostureTimer(status) {
       intervalRef.current = null;
     }
 
-    if (status === "Needs Correction") {
+    const normalized = String(status).toLowerCase();
+    if (normalized === "bad" || normalized === "drift") {
       startTimeRef.current = Date.now();
 
       intervalRef.current = setInterval(() => {
@@ -44,7 +45,7 @@ export default function usePostureTimer(status) {
       }, 100);
     } else {
       startTimeRef.current = null;
-      dispatch({ type: "RESET" }); // 🔥 important fix
+      dispatch({ type: "RESET" });
     }
 
     return () => {

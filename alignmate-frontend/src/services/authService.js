@@ -1,68 +1,74 @@
+// src/services/authService.js
 
-// REGISTER
+const API = "http://localhost:8000/auth";
+
+// ── REGISTER ─────────────────────────────────────────────────────────────────
 export const registerUser = async (data) => {
-  const users = JSON.parse(localStorage.getItem("users")) || [];
+  try {
+    const res = await fetch(`${API}/register`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        name:     data.name,
+        email:    data.email,
+        password: data.password,
+      }),
+    });
 
-  const existingUser = users.find((u) => u.email === data.email);
+    const json = await res.json();
 
-  if (existingUser) {
-    return {
-      success: false,
-      message: "An account with this email already exists",
-    };
+    if (!res.ok) {
+      return {
+        success: false,
+        message: json.detail ?? "Registration failed",
+      };
+    }
+
+    return { success: true, user: json.user };
+
+  } catch {
+    return { success: false, message: "Server unreachable. Is the backend running?" };
   }
-
-  const newUser = {
-    id: Date.now().toString(),
-    name: data.name,
-    email: data.email,
-    password: data.password,
-  };
-
-  localStorage.setItem("users", JSON.stringify([...users, newUser]));
-
-  return {
-    success: true,
-    user: {
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-    },
-  };
 };
 
-// 🔹 LOGIN
+// ── LOGIN ─────────────────────────────────────────────────────────────────────
 export const loginUser = async (data) => {
-  const users = JSON.parse(localStorage.getItem("users")) || [];
+  try {
+    const res = await fetch(`${API}/login`, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify({
+        email:    data.email,
+        password: data.password,
+      }),
+    });
 
-  const user = users.find(
-    (u) => u.email === data.email && u.password === data.password
-  );
+    const json = await res.json();
 
-  if (!user) {
-    return {
-      success: false,
-      message: "Invalid email or password",
-    };
+    if (!res.ok) {
+      return {
+        success: false,
+        message: json.detail ?? "Invalid email or password",
+      };
+    }
+
+    // ✅ Save full user (including profile) to localStorage for session persistence
+    localStorage.setItem("currentUser", JSON.stringify(json.user));
+
+    return { success: true, user: json.user };
+
+  } catch {
+    return { success: false, message: "Server unreachable. Is the backend running?" };
   }
-
-  return {
-    success: true,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    },
-  };
 };
 
-// 🔹 GET CURRENT USER
+// ── GET CURRENT USER ──────────────────────────────────────────────────────────
 export const getCurrentUser = () => {
   const stored = localStorage.getItem("currentUser");
   return stored ? JSON.parse(stored) : null;
 };
 
-// 🔹 LOGOUT
+// ── LOGOUT ────────────────────────────────────────────────────────────────────
 export const logoutUser = () => {
   localStorage.removeItem("currentUser");
 };

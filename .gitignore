@@ -53,3 +53,15 @@ dist-ssr/
 # =========================
 .DS_Store
 Thumbs.db
+
+# =========================
+# Personal / Session Notes
+# =========================
+handoff.md
+
+# =========================
+# Python Build / Packaging
+# =========================
+*.egg-info/
+build/
+*.egg

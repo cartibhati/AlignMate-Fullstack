@@ -7,3 +7,10 @@ scikit-learn
 fastapi
 uvicorn
 websockets
+langchain
+langchain-ollama
+sqlmodel
+pymysql
+passlib[bcrypt]
+python-multipart
+email-validator

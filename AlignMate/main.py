@@ -1,3 +1,4 @@
+import os
 from vision.camera import camera_stream
 from posture.geometry import calculate_neck_angle, NeckAngleSmoother
 from posture.posture_rules import is_lateral_neck_tilt, is_shoulder_imbalanced
@@ -37,7 +38,26 @@ RECOVERY_MESSAGE_DURATION = 3  # seconds
 # ======================
 # LOAD MODEL
 # ======================
-ml_model = joblib.load("posture_model_v3.pkl")
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "posture_model_v3.pkl")
+ml_model = joblib.load(MODEL_PATH)
+
+
+def get_bad_prob(model, row):
+    try:
+        probs = model.predict_proba([row])[0]
+        classes = list(getattr(model, "classes_", []))
+        if "incorrect" in classes:
+            idx = classes.index("incorrect")
+        elif "bad" in classes:
+            idx = classes.index("bad")
+        else:
+            idx = 1 if len(probs) > 1 else 0
+        return float(probs[idx])
+    except Exception:
+        try:
+            return float(probs[1] if len(probs) > 1 else probs[0])
+        except Exception:
+            return 0.0
 
 # ======================
 # GLOBAL STATE
@@ -93,7 +113,7 @@ def process_frame(frame, landmarks):
         row += [lm.x, lm.y, lm.z]
 
     prediction = ml_model.predict([row])[0]
-    prob = ml_model.predict_proba([row])[0][1]
+    prob = get_bad_prob(ml_model, row)
 
     # ---- smoothing ----
     prob_history.append(prob)

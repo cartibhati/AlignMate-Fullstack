@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 
-export default function usePostureAnalysis(results) {
-  const [wsData, setWsData]               = useState(null);
+// ✅ Accept mode as a parameter
+export default function usePostureAnalysis(results, mode = "student") {
+  const [wsData, setWsData]                     = useState(null);
   const [connectionStatus, setConnectionStatus] = useState("connecting");
   const socketRef = useRef(null);
 
   // ── 1. WebSocket connection ──────────────────────────────────────────────
   useEffect(() => {
-    // ✅ FIX 1: Correct endpoint — was "/ws/posture", server only has "/ws"
     const socket = new WebSocket("ws://localhost:8000/ws");
     socketRef.current = socket;
 
@@ -25,8 +25,9 @@ export default function usePostureAnalysis(results) {
       }
     };
 
-    socket.onerror = () => {
+    socket.onerror = (event) => {
       setConnectionStatus("disconnected");
+      console.warn("WS error:", event);
     };
 
     socket.onclose = () => {
@@ -35,16 +36,10 @@ export default function usePostureAnalysis(results) {
       console.log("❌ WebSocket closed");
     };
 
-    return () => {
-      socket.close();
-    };
+    return () => socket.close();
   }, []);
 
-  // ── 2. Send landmarks to server on every new pose frame ─────────────────
-  // ✅ FIX 2: The old hook NEVER sent any data to the server.
-  // The server does `await websocket.receive_text()` and waits indefinitely.
-  // This effect fires whenever MediaPipe produces new results and pushes
-  // the 33 landmark points to the backend for analysis.
+  // ── 2. Send landmarks + mode on every new pose frame ────────────────────
   useEffect(() => {
     const landmarks = results?.poseLandmarks;
     const socket    = socketRef.current;
@@ -52,6 +47,7 @@ export default function usePostureAnalysis(results) {
     if (!landmarks || !socket || socket.readyState !== WebSocket.OPEN) return;
 
     const payload = {
+      mode,                          // ✅ send mode to backend
       landmarks: landmarks.map((lm) => ({
         x:          lm.x,
         y:          lm.y,
@@ -61,20 +57,15 @@ export default function usePostureAnalysis(results) {
     };
 
     socket.send(JSON.stringify(payload));
-  }, [results]);
+  }, [results, mode]);              // ✅ re-send if mode changes
 
   // ── 3. Derive display data ───────────────────────────────────────────────
   const data = useMemo(() => {
-    // If server has responded, always prefer that data
     if (wsData) return wsData;
 
-    // No pose detected yet
     const landmarks = results?.poseLandmarks;
     if (!landmarks || landmarks.length === 0) {
       return {
-        // ✅ FIX 3: Use lowercase "good" to match server output and
-        // usePostureTimer's comparisons. The old fallback "Good" (capital G)
-        // caused the bad-posture timer to never reset when WS was offline.
         status:   "good",
         score:    0,
         feedback: ["Waiting for pose detection..."],
@@ -83,8 +74,6 @@ export default function usePostureAnalysis(results) {
       };
     }
 
-    // Pose is visible but backend isn't responding yet — show neutral state
-    // instead of running a broken local calculation (was producing -178° slope).
     return {
       status:   "good",
       score:    50,
