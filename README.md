@@ -1,202 +1,412 @@
-# 🧠 AlignMate – AI-Powered Real-Time Posture Coach
+<div align="center">
 
-Prevent “Tech Neck” before it starts — with intelligent, real-time posture analysis powered by computer vision and machine learning.
+# 🏋️ AlignMate
 
----
+**Real-time posture detection & athletic performance web app**
 
-## 📌 About The Project
+![Python](https://img.shields.io/badge/Python-3.10-blue?style=flat-square&logo=python)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?style=flat-square&logo=fastapi)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
+![MediaPipe](https://img.shields.io/badge/MediaPipe-Pose-orange?style=flat-square)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=flat-square&logo=mysql)
 
-AlignMate is a **fullstack posture correction system** that acts like a digital chiropractor.
+*Analyze your posture, track your workouts, and get AI-powered coaching — in real time.*
 
-It uses:
-- 📷 Webcam input  
-- 🧠 Machine Learning  
-- ⚡ Real-time feedback  
-
-To:
-- Monitor posture continuously  
-- Detect misalignment  
-- Provide instant corrective feedback  
-- Guide users through recovery exercises  
+</div>
 
 ---
 
-## 🏗️ Project Architecture
+## 📋 Table of Contents
 
-Frontend (React)  
-↓  
-WebSocket (Real-time)  
-↓  
-FastAPI Backend  
-↓  
-ML Model (Random Forest)  
-↓  
-MediaPipe Pose Detection  
-
----
-
-## ✨ Key Features
-
-### 🧠 AI-Powered Posture Detection
-- Real-time classification of posture
-- Confidence-based scoring system
-
-### ⚡ Live Feedback System
-- Posture score (0–100)
-- Drift detection
-- Bad posture duration tracking
-
-### 🧍 Rule-Based + ML Hybrid System
-- Neck tilt detection
-- Shoulder imbalance detection
-- ML probability smoothing
-
-### 🏋️ Recovery System
-- Shoulder roll exercise tracking
-- Rep counting using motion verification
-
-### 🔐 Frontend Features
-- Authentication system
-- Protected routes
-- Theme switching (Light/Dark)
-- Smooth UI animations (Framer Motion)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Tech Stack](#-tech-stack)
+- [Architecture](#-architecture)
+- [Project Structure](#-project-structure)
+- [Data Flow](#-data-flow)
+- [Exercise Analyzers](#-exercise-analyzers)
+- [Getting Started](#-getting-started)
+- [Environment Setup](#-environment-setup)
+- [API Reference](#-api-reference)
+- [Roadmap](#-roadmap)
 
 ---
 
-## 🛠️ Tech Stack
+## 🧠 Overview
 
-### 🔹 Frontend
-- React (Vite)
-- Tailwind CSS
-- Framer Motion
-- React Router
-- React Webcam
-
-### 🔹 Backend
-- FastAPI
-- WebSockets
-- MediaPipe
-- OpenCV
-
-### 🔹 Machine Learning
-- Scikit-learn (Random Forest)
-- NumPy / Pandas
-- Joblib
+AlignMate is a full-stack web application that uses your webcam to analyze posture and exercise form in real time. It leverages **MediaPipe Pose** for 33-keypoint landmark detection, **LangChain + Ollama (Llama 3.2)** for AI feedback, and a **FastAPI + MySQL** backend to track your sessions and progress over time.
 
 ---
 
-## 📊 Machine Learning Pipeline
+## ✨ Features
 
-### 📷 Feature Extraction
-- 33 pose landmarks from MediaPipe
-- Each landmark → (x, y, z)
-
-Total Features:  
-33 × 3 = 99 features
-
----
-
-### 🏷️ Labels
-- correct → good posture  
-- incorrect → bad posture  
+| Feature | Description |
+|---|---|
+| 📸 **Live Posture Analysis** | Real-time webcam feed with pose classification and voice alerts |
+| 🏋️ **Exercise Form Detection** | 12 exercises with rep counting, phase detection, and form feedback |
+| 🤖 **AI Coaching** | LLM-powered feedback every 30 seconds during workouts |
+| 📅 **Workout Planning** | Personalized AI-generated workout + diet plans |
+| 📊 **Progress Dashboard** | Session history, exercise records, streak tracking |
+| 🗓️ **Calendar View** | Monthly workout calendar with current and longest streaks |
+| 👤 **User Profiles** | Onboarding with age, weight, goals, equipment, diet preferences |
+| 🔊 **Voice Alerts** | Mode-aware speech synthesis with mute toggle |
 
 ---
 
-### 🧪 Model Training
+## 🛠 Tech Stack
 
-Run:
-python train_model.py
+### Backend
+- **FastAPI** — async REST API + WebSocket server
+- **MediaPipe** — 33-keypoint pose landmark detection
+- **LangChain + Ollama (Llama 3.2)** — AI feedback & workout planning
+- **SQLModel** — ORM for MySQL / SQLite
+- **bcrypt** — password hashing
 
-- Train/test split (80/20)
-- RandomForestClassifier (100 trees)
-- Accuracy evaluation
+### Frontend
+- **React 18 + Vite** — fast SPA
+- **Tailwind CSS** — utility-first styling
+- **WebSocket API** — real-time pose streaming
+- **Web Speech API** — voice alerts
 
-Model saved as:
-posture_model_v3.pkl
-
----
-
-### 🔄 Data Collection
-
-Run:
-python collect_data.py
-
-Controls:
-- c → correct posture  
-- i → incorrect posture  
-- q → quit  
+### Database
+- **MySQL 8** — primary (users, sessions, exercise history)
+- **SQLite** — fallback if MySQL is unavailable
 
 ---
 
-### 🤖 Inference
+## 🏗 Architecture
 
-- Landmarks → 99 features  
-- Model → predict_proba()  
-- Output → posture probability  
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        CLIENT BROWSER                        │
+│                                                              │
+│   ┌──────────────┐    ┌──────────────┐   ┌──────────────┐   │
+│   │  React Pages │    │  WebSocket   │   │ Web Speech   │   │
+│   │  (Vite/TW)   │◄──►│  Client     │   │ API (Voice)  │   │
+│   └──────┬───────┘    └──────┬───────┘   └──────────────┘   │
+└──────────┼────────────────── ┼───────────────────────────────┘
+           │ HTTP REST          │ WebSocket (ws://)
+           ▼                    ▼
+┌─────────────────────────────────────────────────────────────┐
+│                     FASTAPI BACKEND                          │
+│                                                              │
+│  ┌─────────────┐   ┌──────────────┐   ┌─────────────────┐  │
+│  │ auth_router │   │  /ws (pose)  │   │ /ws/exercise    │  │
+│  │  REST API   │   │  WebSocket   │   │  WebSocket      │  │
+│  └──────┬──────┘   └──────┬───────┘   └────────┬────────┘  │
+│         │                 │                     │            │
+│         ▼                 ▼                     ▼            │
+│  ┌─────────────┐   ┌──────────────┐   ┌─────────────────┐  │
+│  │   models.py │   │  MediaPipe   │   │ Exercise        │  │
+│  │  (SQLModel) │   │  Pose Proc.  │   │ Analyzers (12)  │  │
+│  └──────┬──────┘   └──────┬───────┘   └────────┬────────┘  │
+│         │                 │                     │            │
+│         ▼                 ▼                     ▼            │
+│  ┌─────────────┐   ┌──────────────────────────────────────┐ │
+│  │  MySQL DB   │   │         ai_feedback.py               │ │
+│  │  (alignmate)│   │    LangChain + Ollama llama3.2        │ │
+│  └─────────────┘   └──────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## ⚙️ Backend Setup
+## 📁 Project Structure
 
-pip install -r requirements.txt  
-uvicorn server:app --reload  
-
-Runs at: http://localhost:8000  
-WebSocket: ws://localhost:8000/ws  
+```
+AlignMate_nba/
+│
+├── AlignMate/                      # 🐍 FastAPI Backend
+│   ├── posture/
+│   │   ├── exercises/              # 12 exercise analyzers
+│   │   │   ├── squat.py
+│   │   │   ├── pushup.py
+│   │   │   ├── plank.py
+│   │   │   ├── deadlift.py
+│   │   │   ├── bench_press.py
+│   │   │   ├── barbell_row.py
+│   │   │   ├── bicep_curl.py
+│   │   │   ├── lateral_raise.py
+│   │   │   ├── lunge.py
+│   │   │   ├── hip_thrust.py
+│   │   │   ├── shoulder_press.py
+│   │   │   └── tricep_dip.py
+│   │   ├── exercise_mapper.py      # Maps AI names → internal IDs
+│   │   ├── exercise_verifier.py    # Shoulder roll verifier
+│   │   ├── geometry.py             # Angle/distance calculations
+│   │   ├── mode_config.py          # Posture mode settings
+│   │   └── posture_rules.py        # Posture classification rules
+│   ├── utils/
+│   │   └── logger.py
+│   ├── vision/
+│   │   └── camera.py
+│   ├── server.py                   # FastAPI app + WebSocket handlers
+│   ├── auth_router.py              # Auth + profile + history endpoints
+│   ├── models.py                   # SQLModel DB tables
+│   ├── database.py                 # MySQL + SQLite setup
+│   ├── ai_feedback.py              # LangChain + Ollama feedback
+│   ├── workout_planner.py          # AI workout + diet plan generator
+│   └── requirements.txt
+│
+├── alignmate-frontend/             # ⚛️ React + Vite Frontend
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── HomePage.jsx
+│   │   │   ├── LoginPage.jsx
+│   │   │   ├── RegisterPage.jsx
+│   │   │   ├── OnboardingPage.jsx  # 6-step profile form
+│   │   │   ├── DashboardPage.jsx   # Sessions + history tabs
+│   │   │   ├── LivePosturePage.jsx # Real-time posture analysis
+│   │   │   ├── ExercisePage.jsx    # Form detection + rep counter
+│   │   │   ├── PlanPage.jsx        # AI workout + diet plan
+│   │   │   ├── CalendarPage.jsx    # Monthly calendar + streaks
+│   │   │   └── ProfilePage.jsx     # View + edit profile
+│   │   ├── hooks/
+│   │   │   ├── usePostureAnalysis.js
+│   │   │   ├── useVoiceAlert.js
+│   │   │   └── useAIFeedback.js
+│   │   ├── services/
+│   │   │   ├── authService.js      # API calls (MySQL backend)
+│   │   │   └── sessionStorage.js   # Session save (MySQL + fallback)
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   ├── Sidebar.jsx
+│   │   │   │   └── Layout.jsx
+│   │   │   └── common/
+│   │   │       └── Navbar.jsx      # Mobile-only top bar
+│   │   ├── context/
+│   │   │   └── AuthContext.jsx
+│   │   └── routes.jsx
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   └── index.html
+│
+└── .gitignore
+```
 
 ---
 
-## 🌐 Frontend Setup
+## 🔄 Data Flow
 
-cd alignmate-frontend  
-npm install  
-npm run dev  
+### Live Posture Analysis
 
-Runs at: http://localhost:5173  
+```
+Webcam Feed
+    │
+    ▼
+MediaPipe Pose (browser or backend)
+    │  33 keypoints {x, y, z, visibility}
+    ▼
+WebSocket /ws  ──────────────────────────────────┐
+    │                                             │
+    ▼                                             ▼
+posture_rules.py                         ai_feedback.py
+(angle-based classification)         (LangChain + Llama3.2)
+    │                                             │
+    ▼                                             ▼
+ good/bad + score                      AI text feedback
+    │                                    (every 30s)
+    ▼
+Frontend UI
+ ├── Pose overlay
+ ├── Score badge
+ ├── Voice alert (SpeechSynthesis)
+ └── AI feedback panel
+```
+
+### Exercise Form Detection
+
+```
+Webcam Feed → MediaPipe Pose (33 keypoints)
+    │
+    ▼
+WebSocket /ws/exercise
+    │
+    ├── exercise_mapper.py  →  maps name to analyzer ID
+    │
+    ▼
+Exercise Analyzer (e.g. squat.py)
+    │  angle/position-based phase detection
+    ├── Phase: DOWN / UP / TRANSITION
+    ├── Rep counter
+    └── Form feedback (knee cave, depth, etc.)
+    │
+    ▼
+Frontend ExercisePage
+    ├── Rep counter display
+    ├── Rest timer (auto-start after set)
+    ├── Voice motivation
+    └── Save to MySQL via POST /auth/exercise-history
+```
+
+### Auth Flow
+
+```
+/register  →  POST /auth/register  →  MySQL user table
+    │
+    ▼
+/onboarding  →  6-step form  →  POST /auth/profile  →  userprofile table
+    │
+    ▼
+/dashboard  (sessions + exercise history tabs)
+```
 
 ---
 
-## 🔌 Backend Integration
+## 💪 Exercise Analyzers
 
-Frontend connects using:
+All 12 analyzers use **angle + position-based phase detection** — no ML model required for exercise tracking.
 
-const ws = new WebSocket("ws://localhost:8000/ws");
+| Exercise | Key Angles Tracked |
+|---|---|
+| Squat | Hip, knee, ankle flexion |
+| Push-up | Elbow angle, body alignment |
+| Plank | Hip alignment, shoulder stack |
+| Deadlift | Hip hinge, back angle |
+| Bench Press | Elbow angle, wrist alignment |
+| Barbell Row | Elbow pull, torso angle |
+| Bicep Curl | Elbow flexion/extension |
+| Lateral Raise | Shoulder abduction angle |
+| Lunge | Front knee angle, hip drop |
+| Hip Thrust | Hip extension angle |
+| Shoulder Press | Elbow + shoulder angle |
+| Tricep Dip | Elbow flexion depth |
 
-Expected data format:
+---
 
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Python 3.10
+- Node.js 18+
+- MySQL 8.0
+- [Ollama](https://ollama.com/) with `llama3.2` model
+
+### 1. Clone the repo
+
+```bash
+git clone https://github.com/your-username/AlignMate.git
+cd AlignMate
+```
+
+### 2. Backend Setup
+
+```bash
+cd AlignMate
+python -m venv venv
+venv\Scripts\activate          # Windows
+# source venv/bin/activate     # Mac/Linux
+
+pip install -r requirements.txt
+```
+
+### 3. Database Setup
+
+```sql
+CREATE DATABASE alignmate;
+```
+
+Update `database.py` if your MySQL credentials differ from the defaults (`root`/`root`).
+
+### 4. Start Ollama
+
+```bash
+ollama serve
+ollama pull llama3.2
+```
+
+### 5. Start the Backend
+
+```bash
+uvicorn server:app --reload
+# Runs on http://localhost:8000
+```
+
+### 6. Frontend Setup
+
+```bash
+cd alignmate-frontend
+npm install
+npm run dev
+# Runs on http://localhost:5173
+```
+
+---
+
+## ⚙️ Environment Setup
+
+| Service | URL | Notes |
+|---|---|---|
+| FastAPI Backend | `http://localhost:8000` | uvicorn server |
+| React Frontend | `http://localhost:5173` | Vite dev server |
+| Ollama | `http://localhost:11434` | Must be running for AI features |
+| MySQL | `localhost:3306` | DB: `alignmate`, user: `root`, pass: `root` |
+
+> **Note:** For Android device testing, replace `localhost` with your machine's LAN IP address in the frontend config.
+
+---
+
+## 📡 API Reference
+
+### Auth Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/auth/register` | Register new user |
+| POST | `/auth/login` | Login, returns token |
+| GET | `/auth/profile` | Get user profile |
+| PUT | `/auth/profile` | Update user profile |
+| GET | `/auth/sessions` | Get posture sessions |
+| POST | `/auth/exercise-history` | Save exercise record |
+| GET | `/auth/exercise-history` | Get exercise history |
+
+### WebSocket Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `ws://localhost:8000/ws` | Live posture analysis stream |
+| `ws://localhost:8000/ws/exercise` | Exercise form detection stream |
+
+#### WebSocket Payload (send)
+
+```json
 {
-  "score": number,
-  "status": "good" | "drift" | "bad",
-  "angles": {
-    "neck": number,
-    "shoulder": number
-  },
-  "feedback": string
+  "landmarks": [ { "x": 0.5, "y": 0.3, "z": 0.0, "visibility": 0.99 } ],
+  "mode": "posture",
+  "exercise": "squat"
 }
+```
+
+#### WebSocket Response
+
+```json
+{
+  "status": "good",
+  "score": 87,
+  "feedback": "Keep your back straight",
+  "reps": 5,
+  "phase": "DOWN"
+}
+```
 
 ---
 
+## 🗺 Roadmap
 
-## 🚀 Future Scope
-
-- Real-time analytics dashboard  
-- Posture history tracking  
-- Deep learning models (LSTM / CNN)  
-- Personalized posture correction  
-- Mobile app integration  
-
----
-
-## 🤝 Contribution
-
-Contributions are welcome!
-
-- Fork the repo  
-- Create a feature branch  
-- Submit a pull request  
+- [x] Live posture analysis (web)
+- [x] 12 exercise analyzers
+- [x] AI feedback (LangChain + Llama 3.2)
+- [x] AI workout + diet plan generation
+- [x] User auth + profile + history (MySQL)
+- [x] Dashboard + Calendar + Streaks
+- [ ] Mobile app (Expo React Native) — *in progress*
+  - [ ] MoveNet → MediaPipe keypoint mapping
+  - [ ] PoseCamera component
+  - [ ] Exercise + Dashboard screens
+- [ ] Progressive Web App (PWA) support
+- [ ] Export workout history as PDF
 
 ---
 
-## 🎯 Goal
-
-To help users build healthy posture habits and prevent long-term spinal issues using AI.
