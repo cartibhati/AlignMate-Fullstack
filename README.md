@@ -287,7 +287,7 @@ All 12 analyzers use **angle + position-based phase detection** — no ML model 
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/AlignMate.git
+git clone https://github.com/cartibhati/AlignMate.git
 cd AlignMate
 ```
 
