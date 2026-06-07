@@ -20,19 +20,19 @@ export default function SessionCard({ session, index, total }) {
       : 100;
 
   const scoreColor =
-    session.avgScore >= 75 ? "text-emerald-600"
-    : session.avgScore >= 50 ? "text-amber-500"
-    : "text-red-500";
+    session.avgScore >= 75 ? "text-emerald-600 dark:text-emerald-400"
+    : session.avgScore >= 50 ? "text-amber-500 dark:text-amber-400"
+    : "text-red-500 dark:text-red-400";
 
   const scoreBorderColor =
-    session.avgScore >= 75 ? "border-emerald-200"
-    : session.avgScore >= 50 ? "border-amber-200"
-    : "border-red-200";
+    session.avgScore >= 75 ? "border-emerald-200 dark:border-emerald-500/20"
+    : session.avgScore >= 50 ? "border-amber-200 dark:border-amber-500/20"
+    : "border-red-200 dark:border-red-500/20";
 
   const scoreBg =
-    session.avgScore >= 75 ? "bg-emerald-50"
-    : session.avgScore >= 50 ? "bg-amber-50"
-    : "bg-red-50";
+    session.avgScore >= 75 ? "bg-emerald-50 dark:bg-emerald-500/10"
+    : session.avgScore >= 50 ? "bg-amber-50 dark:bg-amber-500/10"
+    : "bg-red-50 dark:bg-red-500/10";
 
   const formatDuration = (secs) => {
     if (!secs || secs === 0) return "0s";
@@ -47,36 +47,36 @@ export default function SessionCard({ session, index, total }) {
     : 0;
 
   return (
-    <div className={`border ${scoreBorderColor} rounded-2xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-200`}>
+    <div className={`border border-border/80 dark:border-border rounded-2xl p-5 bg-card shadow-sm hover:shadow-md hover:border-primary/30 dark:hover:shadow-neon/5 transition-all duration-200`}>
 
       {/* Header row */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <p className="text-xs font-medium text-gray-400 tracking-wide uppercase mb-0.5">
+          <p className="text-xs font-medium text-muted-foreground/75 tracking-wide uppercase mb-0.5">
             Session #{total - index}
             {session.mode && (
-              <span className="ml-2 normal-case font-normal text-gray-400">
+              <span className="ml-2 normal-case font-normal text-muted-foreground/60">
                 · {MODE_LABELS[session.mode] ?? session.mode}
               </span>
             )}
           </p>
-          <p className="text-sm font-semibold text-gray-800">{session.date}</p>
-          <p className="text-xs text-gray-400">{session.time}</p>
+          <p className="text-sm font-semibold text-foreground">{session.date}</p>
+          <p className="text-xs text-muted-foreground">{session.time}</p>
         </div>
 
         <div className={`${scoreBg} ${scoreBorderColor} border rounded-xl px-4 py-2 text-center min-w-[72px]`}>
           <p className={`text-2xl font-bold ${scoreColor}`}>{session.avgScore}%</p>
-          <p className="text-[10px] text-gray-400 font-medium">avg score</p>
+          <p className="text-[10px] text-muted-foreground/70 font-medium">avg score</p>
         </div>
       </div>
 
       {/* Progress bar */}
       <div className="mb-4">
-        <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+        <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
           <span>Posture quality</span>
           <span>{goodPercent}% good</span>
         </div>
-        <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+        <div className="h-2 rounded-full bg-muted overflow-hidden">
           <div
             className="h-full rounded-full bg-emerald-400 transition-all duration-500"
             style={{ width: `${goodPercent}%` }}
@@ -91,32 +91,32 @@ export default function SessionCard({ session, index, total }) {
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-2 text-center text-xs">
-        <div className="bg-gray-50 rounded-xl p-2.5">
-          <p className="text-gray-400 text-[10px] uppercase tracking-wide mb-0.5">Duration</p>
-          <p className="font-bold text-gray-700 text-sm">{formatDuration(session.duration)}</p>
+        <div className="bg-muted/50 rounded-xl p-2.5">
+          <p className="text-muted-foreground text-[10px] uppercase tracking-wide mb-0.5">Duration</p>
+          <p className="font-bold text-foreground text-sm">{formatDuration(session.duration)}</p>
         </div>
-        <div className="bg-red-50 rounded-xl p-2.5">
-          <p className="text-red-400 text-[10px] uppercase tracking-wide mb-0.5">Bad posture</p>
-          <p className="font-bold text-red-600 text-sm">{formatDuration(session.badDuration)}</p>
+        <div className="bg-red-500/10 border border-red-500/10 dark:border-red-500/20 rounded-xl p-2.5">
+          <p className="text-red-500 dark:text-red-400 text-[10px] uppercase tracking-wide mb-0.5">Bad posture</p>
+          <p className="font-bold text-red-600 dark:text-red-400 text-sm">{formatDuration(session.badDuration)}</p>
         </div>
-        <div className="bg-emerald-50 rounded-xl p-2.5">
-          <p className="text-emerald-500 text-[10px] uppercase tracking-wide mb-0.5">Good time</p>
-          <p className="font-bold text-emerald-600 text-sm">{goodPercent}%</p>
+        <div className="bg-emerald-500/10 border border-emerald-500/10 dark:border-emerald-500/20 rounded-xl p-2.5">
+          <p className="text-emerald-500 dark:text-emerald-400 text-[10px] uppercase tracking-wide mb-0.5">Good time</p>
+          <p className="font-bold text-emerald-600 dark:text-emerald-400 text-sm">{goodPercent}%</p>
         </div>
       </div>
 
       {/* ✅ AI Summary — expandable */}
       {session.aiFeedback && (
-        <div className="mt-3 border-t border-gray-100 pt-3">
+        <div className="mt-3 border-t border-border/80 pt-3">
           <button
             onClick={() => setShowAI((v) => !v)}
-            className="flex items-center gap-1.5 text-xs font-medium text-indigo-500 hover:text-indigo-700 transition"
+            className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition"
           >
             🤖 AI Coach Summary
-            <span className="text-gray-400">{showAI ? "▲" : "▼"}</span>
+            <span className="text-muted-foreground/60">{showAI ? "▲" : "▼"}</span>
           </button>
           {showAI && (
-            <p className="text-xs text-gray-600 leading-relaxed mt-2 bg-indigo-50 rounded-xl p-3">
+            <p className="text-xs text-muted-foreground leading-relaxed mt-2 bg-muted/60 rounded-xl p-3 border border-border/40">
               {session.aiFeedback}
             </p>
           )}
@@ -125,7 +125,7 @@ export default function SessionCard({ session, index, total }) {
 
       {/* Regular feedback */}
       {!session.aiFeedback && session.feedback?.length > 0 && (
-        <p className="text-xs text-gray-400 italic mt-3 truncate">
+        <p className="text-xs text-muted-foreground italic mt-3 truncate">
           💬 {Array.isArray(session.feedback)
                 ? session.feedback[0]
                 : session.feedback}

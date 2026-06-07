@@ -13,9 +13,9 @@ import { AuthContext } from "@/context/AuthContext";
 import { saveSession } from "@/services/sessionStorage";
 
 const MODE_STYLES = {
-  student: { bg: "bg-blue-100",   text: "text-blue-700",   label: "🎓 Student" },
-  athlete: { bg: "bg-orange-100", text: "text-orange-700", label: "🏋️ Athlete" },
-  both:    { bg: "bg-purple-100", text: "text-purple-700", label: "⚡ Both"    },
+  student: { bg: "bg-primary/10 border-primary/20",   text: "text-primary border",   label: "🎓 Student" },
+  athlete: { bg: "bg-orange-500/10 border-orange-500/20", text: "text-orange-500 border", label: "🏋️ Athlete" },
+  both:    { bg: "bg-purple-500/10 border-purple-500/20", text: "text-purple-500 border", label: "⚡ Both"    },
 };
 
 export default function LivePosturePage() {
@@ -167,40 +167,40 @@ export default function LivePosturePage() {
   const modeStyle = MODE_STYLES[mode] || MODE_STYLES.student;
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-background overflow-hidden font-sans">
 
-      <div className="w-2/3 flex items-center justify-center bg-black">
+      <div className="w-2/3 flex items-center justify-center bg-black border-r border-border">
         <CameraFeed onPoseResults={setPoseResults} />
       </div>
 
-      <div className="w-1/3 p-6 flex flex-col gap-6 bg-white border-l overflow-y-auto">
+      <div className="w-1/3 p-6 flex flex-col gap-6 bg-card border-l border-border overflow-y-auto text-left">
 
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Live Analysis</h2>
+          <h2 className="text-xl font-black uppercase tracking-tight text-foreground">Live Analysis</h2>
           <ConnectionStatus status={connectionStatus} />
         </div>
 
         <div className="flex items-center justify-between">
-          <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${modeStyle.bg} ${modeStyle.text}`}>
+          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${modeStyle.bg} ${modeStyle.text}`}>
             {modeStyle.label} mode
           </div>
           <button
             onClick={() => { if (voiceEnabled) cancel(); setVoiceEnabled((v) => !v); }}
-            className={`text-xs px-3 py-1 rounded-full border transition-all ${
-              voiceEnabled ? "bg-black text-white border-black" : "bg-white text-gray-500 border-gray-300"
+            className={`text-xs px-3.5 py-1 rounded-full border transition-all duration-200 ${
+              voiceEnabled ? "bg-primary text-primary-foreground border-primary font-bold shadow-neon" : "bg-transparent text-muted-foreground border-border hover:bg-accent"
             }`}
           >
             {voiceEnabled ? "🔊 Voice On" : "🔇 Voice Off"}
           </button>
         </div>
 
-        <button onClick={handleEndSession} className="bg-black text-white px-3 py-2 rounded">
+        <button onClick={handleEndSession} className="bg-red-500 hover:bg-red-600 text-white font-extrabold uppercase tracking-wider py-3 rounded-xl shadow-lg shadow-red-500/15 transition-all">
           End Session
         </button>
 
         {isBadPosture && (
-          <div className="bg-red-100 text-red-700 p-3 rounded-lg text-sm font-medium">
-            ⚠️ Bad posture for {duration.toFixed(1)} sec
+          <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-4 rounded-xl text-xs font-bold uppercase tracking-wide">
+            ⚠️ Bad posture alert: {duration.toFixed(1)} sec
           </div>
         )}
 
@@ -209,29 +209,29 @@ export default function LivePosturePage() {
         <AngleMetrics metrics={analysis.metrics} />
 
         {/* AI Coach panel */}
-        <div className="bg-gray-50 rounded-xl p-4 border">
-          <p className="text-xs font-semibold text-gray-400 mb-1">🤖 AI Coach</p>
+        <div className="bg-muted/40 rounded-2xl p-5 border border-border">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">🤖 AI Coach</p>
           {aiLoading ? (
-            <p className="text-sm text-gray-400 animate-pulse">Analysing your session...</p>
+            <p className="text-sm text-muted-foreground animate-pulse font-medium">Analysing your session posture...</p>
           ) : aiFeedback ? (
-            <p className="text-sm text-gray-700 leading-relaxed">{aiFeedback}</p>
+            <p className="text-sm text-foreground font-medium leading-relaxed">{aiFeedback}</p>
           ) : (
-            <p className="text-sm text-gray-400">AI feedback appears every 30s</p>
+            <p className="text-sm text-muted-foreground font-medium">AI feedback appears every 30s</p>
           )}
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center text-xs">
-          <div className="bg-gray-50 rounded-lg p-2">
-            <p className="text-gray-400">Session</p>
-            <p className="font-semibold text-gray-700">{fmt(sessionSeconds)}</p>
+          <div className="bg-muted/50 border border-border rounded-xl p-3">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Session</p>
+            <p className="font-extrabold text-foreground font-display text-sm">{fmt(sessionSeconds)}</p>
           </div>
-          <div className="bg-red-50 rounded-lg p-2">
-            <p className="text-red-400">Bad posture</p>
-            <p className="font-semibold text-red-600">{fmt(totalBadSecs)}</p>
+          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3">
+            <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-1">Bad posture</p>
+            <p className="font-extrabold text-red-500 font-display text-sm">{fmt(totalBadSecs)}</p>
           </div>
-          <div className="bg-green-50 rounded-lg p-2">
-            <p className="text-green-400">Good time</p>
-            <p className="font-semibold text-green-600">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+            <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-1">Good time</p>
+            <p className="font-extrabold text-emerald-500 font-display text-sm">
               {sessionSeconds > 0
                 ? `${Math.max(0, Math.round(((sessionSeconds - totalBadSecs) / sessionSeconds) * 100))}%`
                 : "100%"}

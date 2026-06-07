@@ -1,6 +1,8 @@
 // src/services/authService.js
 
-const API = "http://localhost:8000/auth";
+import { API_BASE_URL } from "@/config";
+
+const API = `${API_BASE_URL}/auth`;
 
 // ── REGISTER ─────────────────────────────────────────────────────────────────
 export const registerUser = async (data) => {

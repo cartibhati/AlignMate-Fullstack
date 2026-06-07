@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 
-const AI_FEEDBACK_URL = "http://localhost:8000/ai-feedback";
+import { API_BASE_URL } from "@/config";
+
+const AI_FEEDBACK_URL = `${API_BASE_URL}/ai-feedback`;
 
 export default function useAIFeedback({
   mode,

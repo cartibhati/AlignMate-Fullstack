@@ -48,45 +48,45 @@ export default function Sidebar({ open, onClose }) {
 
       <aside className={`
         fixed top-0 left-0 h-full z-50 flex flex-col
-        bg-white border-r border-gray-100 shadow-xl
+        bg-card border-r border-border shadow-xl
         transition-all duration-300 ease-in-out w-64
         ${open ? "translate-x-0" : "-translate-x-full"}
         md:translate-x-0 md:static md:shadow-none md:z-auto
       `}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-5 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-5 border-b border-border">
           <span onClick={() => { navigate("/"); onClose(); }}
-            className="text-lg font-bold tracking-tight cursor-pointer text-gray-900">
-            Align<span className="text-indigo-600">Mate</span>
+            className="text-xl font-black tracking-wider cursor-pointer text-foreground uppercase">
+            Align<span className="text-primary">Mate</span>
           </span>
-          <button onClick={onClose} className="md:hidden p-1 rounded-lg hover:bg-gray-100">
-            <X size={18} className="text-gray-500" />
+          <button onClick={onClose} className="md:hidden p-1 rounded-lg hover:bg-accent">
+            <X size={18} className="text-muted-foreground" />
           </button>
         </div>
 
         {/* User card */}
         {isAuthenticated && (
-          <div className="px-4 py-4 border-b border-gray-100">
+          <div className="px-4 py-4 border-b border-border">
             <button onClick={() => { navigate("/profile"); onClose(); }}
-              className="w-full flex items-center gap-3 bg-gray-50 hover:bg-indigo-50 rounded-xl p-3 transition group">
-              <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+              className="w-full flex items-center gap-3 bg-muted/50 hover:bg-accent rounded-xl p-3 transition group border border-border/40">
+              <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-black flex-shrink-0">
                 {(user?.name ?? user?.email ?? "U")[0].toUpperCase()}
               </div>
               <div className="min-w-0 text-left">
-                <p className="text-sm font-semibold text-gray-800 truncate group-hover:text-indigo-700">
+                <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                   {user?.name ?? "User"}
                 </p>
-                <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
             </button>
 
             {streak > 0 && (
-              <div className="mt-2 flex items-center gap-2 bg-orange-50 border border-orange-100 rounded-xl px-3 py-2">
-                <span className="text-base">🔥</span>
+              <div className="mt-2 flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-xl px-3 py-2">
+                <span className="text-base animate-pulse">🔥</span>
                 <div>
-                  <p className="text-xs font-semibold text-orange-600">{streak} day streak</p>
-                  <p className="text-[10px] text-orange-400">Keep it going!</p>
+                  <p className="text-xs font-bold text-orange-500">{streak} day streak</p>
+                  <p className="text-[10px] text-orange-400/80">Keep pushing limits!</p>
                 </div>
               </div>
             )}
@@ -98,10 +98,10 @@ export default function Sidebar({ open, onClose }) {
           {NAV.map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} onClick={onClose}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200
                 ${isActive
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"}`}>
+                  ? "bg-primary text-primary-foreground shadow-neon shadow-sm"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
               <Icon size={18} />
               {label}
             </NavLink>
@@ -109,16 +109,16 @@ export default function Sidebar({ open, onClose }) {
         </nav>
 
         {/* Bottom */}
-        <div className="px-3 py-4 border-t border-gray-100 space-y-1">
+        <div className="px-3 py-4 border-t border-border space-y-1">
           <button onClick={toggleTheme}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition">
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition">
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             {theme === "dark" ? "Light Mode" : "Dark Mode"}
           </button>
 
           {isAuthenticated && (
             <button onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition">
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-500/10 hover:text-red-600 transition">
               <LogOut size={18} />
               Logout
             </button>
@@ -127,11 +127,11 @@ export default function Sidebar({ open, onClose }) {
           {!isAuthenticated && (
             <div className="space-y-1">
               <NavLink to="/login" onClick={onClose}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-100 transition">
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition">
                 Login
               </NavLink>
               <NavLink to="/register" onClick={onClose}
-                className="w-full flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition">
+                className="w-full flex items-center justify-center px-3 py-2.5 rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:opacity-90 transition shadow-neon">
                 Register
               </NavLink>
             </div>

@@ -3,7 +3,9 @@
  * Now saves to MySQL via API. Falls back to localStorage for offline reads.
  */
 
-const API     = "http://localhost:8000/auth";
+import { API_BASE_URL } from "@/config";
+
+const API     = `${API_BASE_URL}/auth`;
 const LS_KEY  = (email) => `alignmate_sessions_${email}`;
 
 // ── Save session to MySQL ─────────────────────────────────────────────────────

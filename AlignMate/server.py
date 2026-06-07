@@ -110,7 +110,7 @@ async def generate_workout_plan(req: PlanRequest):
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    print("✅ Posture WS connected")
+    print("[WS] Posture WS connected")
 
     smoother           = NeckAngleSmoother(window_size=10)
     bad_start_time     = None
@@ -235,9 +235,9 @@ async def websocket_endpoint(websocket: WebSocket):
             }))
 
     except WebSocketDisconnect:
-        print("❌ Posture WS disconnected")
+        print("[WS] Posture WS disconnected")
     except Exception as exc:
-        print("❌ Posture WS error:", exc)
+        print("[WS] Posture WS error:", exc)
         await websocket.close()
 
 
@@ -245,7 +245,7 @@ async def websocket_endpoint(websocket: WebSocket):
 @app.websocket("/ws/exercise")
 async def exercise_websocket(websocket: WebSocket):
     await websocket.accept()
-    print("✅ Exercise WS connected")
+    print("[WS] Exercise WS connected")
 
     analyzer     = None
     exercise_key = None
@@ -262,7 +262,7 @@ async def exercise_websocket(websocket: WebSocket):
                     exercise_key = incoming_ex
                     target_reps  = msg.get("target_reps", 10)
                     analyzer     = EXERCISE_MAP[exercise_key](target_reps=target_reps)
-                    print(f"🏋️ Exercise: {exercise_key}")
+                    print(f"[EXERCISE] Exercise: {exercise_key}")
                 else:
                     await websocket.send_text(json.dumps({"error": f"Unknown exercise: {incoming_ex}"}))
                     continue
@@ -313,7 +313,7 @@ async def exercise_websocket(websocket: WebSocket):
             }))
 
     except WebSocketDisconnect:
-        print("❌ Exercise WS disconnected")
+        print("[WS] Exercise WS disconnected")
     except Exception as exc:
-        print("❌ Exercise WS error:", exc)
+        print("[WS] Exercise WS error:", exc)
         await websocket.close()

@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql:8
+    container_name: alignmate-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: alignmate
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./AlignMate
+      dockerfile: Dockerfile
+    container_name: alignmate-backend
+    restart: always
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:root@db:3306/alignmate
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./alignmate-frontend
+      dockerfile: Dockerfile
+    container_name: alignmate-frontend
+    restart: always
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

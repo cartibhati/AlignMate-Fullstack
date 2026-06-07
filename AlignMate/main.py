@@ -147,7 +147,7 @@ def process_frame(frame, landmarks):
     # ======================
     if state == "bad":
         if now - last_alert_time > ALERT_COOLDOWN:
-            print("🔊 VOICE TRIGGERED")  # debug
+            print("[VOICE] Voice alert triggered")  # debug
             speak("Sit straight")
             last_alert_time = now
 

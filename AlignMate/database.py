@@ -2,6 +2,8 @@
 
 from sqlmodel import SQLModel, create_engine, Session
 
+import os
+
 # ── Update these credentials to match your MySQL setup ───────────────────────
 DB_USER     = "root"
 DB_PASSWORD = "root"   # ← change this
@@ -9,9 +11,11 @@ DB_HOST     = "localhost"
 DB_PORT     = "3306"
 DB_NAME     = "alignmate"
 
-DATABASE_URL = (
-    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-)
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    DATABASE_URL = (
+        f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    )
 
 # Start with a fallback default. If MySQL fails, we re-initialize this to SQLite.
 engine = None

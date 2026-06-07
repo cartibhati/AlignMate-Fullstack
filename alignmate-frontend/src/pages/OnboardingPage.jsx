@@ -2,7 +2,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API = "http://localhost:8000/auth";
+import { API_BASE_URL } from "@/config";
+
+const API = `${API_BASE_URL}/auth`;
 
 const STEPS = [
   { id: "basics",    title: "Basic Info",       subtitle: "Tell us about yourself",           emoji: "👤" },
@@ -52,13 +54,13 @@ const DIET_OPTIONS = [
 function OptionCard({ option, selected, onSelect }) {
   return (
     <button type="button" onClick={() => onSelect(option.id)}
-      className={`flex flex-col items-center p-4 rounded-2xl border-2 text-center transition-all w-full
+      className={`flex flex-col items-center p-5 rounded-2xl border-2 text-center transition-all w-full font-sans
         ${selected === option.id
-          ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-          : "border-gray-200 hover:border-indigo-300 text-gray-700 bg-white"}`}>
+          ? "border-primary bg-primary/10 text-foreground shadow-neon"
+          : "border-border hover:border-primary/50 text-foreground bg-card"}`}>
       <span className="text-3xl mb-2">{option.icon}</span>
-      <span className="font-semibold text-sm">{option.label}</span>
-      {option.desc && <span className="text-xs text-gray-400 mt-0.5">{option.desc}</span>}
+      <span className="font-bold text-sm tracking-tight">{option.label}</span>
+      {option.desc && <span className="text-[11px] text-muted-foreground mt-1 font-medium">{option.desc}</span>}
     </button>
   );
 }
@@ -68,18 +70,18 @@ function MultiOptionCard({ option, selected, onToggle }) {
   const isSelected = selected.includes(option.id);
   return (
     <button type="button" onClick={() => onToggle(option.id)}
-      className={`flex flex-col items-center p-4 rounded-2xl border-2 text-center transition-all w-full relative
+      className={`flex flex-col items-center p-5 rounded-2xl border-2 text-center transition-all w-full relative font-sans
         ${isSelected
-          ? "border-indigo-600 bg-indigo-50 text-indigo-700"
-          : "border-gray-200 hover:border-indigo-300 text-gray-700 bg-white"}`}>
+          ? "border-primary bg-primary/10 text-foreground shadow-neon"
+          : "border-border hover:border-primary/50 text-foreground bg-card"}`}>
       {isSelected && (
-        <span className="absolute top-2 right-2 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center text-white text-[10px]">
+        <span className="absolute top-3 right-3 w-5 h-5 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-black text-[10px]">
           ✓
         </span>
       )}
       <span className="text-3xl mb-2">{option.icon}</span>
-      <span className="font-semibold text-sm">{option.label}</span>
-      {option.desc && <span className="text-xs text-gray-400 mt-0.5">{option.desc}</span>}
+      <span className="font-bold text-sm tracking-tight">{option.label}</span>
+      {option.desc && <span className="text-[11px] text-muted-foreground mt-1 font-medium">{option.desc}</span>}
     </button>
   );
 }
@@ -160,28 +162,28 @@ export default function OnboardingPage() {
   const current  = STEPS[step];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-background bg-grid flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-lg">
 
         {/* Progress */}
-        <div className="mb-8">
-          <div className="flex justify-between text-xs text-gray-400 mb-2">
+        <div className="mb-8 font-sans">
+          <div className="flex justify-between text-xs text-muted-foreground mb-2 font-bold uppercase tracking-wider">
             <span>Step {step + 1} of {STEPS.length}</span>
             <span>{Math.round(progress)}% complete</span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-indigo-600 rounded-full transition-all duration-500"
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all duration-500 shadow-neon"
               style={{ width: `${progress}%` }} />
           </div>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-card rounded-3xl shadow-lg border border-border p-8">
 
           <div className="text-center mb-8">
             <span className="text-5xl">{current.emoji}</span>
-            <h2 className="text-2xl font-bold text-gray-900 mt-3">{current.title}</h2>
-            <p className="text-gray-400 text-sm mt-1">{current.subtitle}</p>
+            <h2 className="text-3xl font-black text-foreground uppercase tracking-tight mt-4 font-sans">{current.title}</h2>
+            <p className="text-muted-foreground text-sm font-medium mt-1.5">{current.subtitle}</p>
           </div>
 
           {/* Step 0 — Basics */}
@@ -192,12 +194,12 @@ export default function OnboardingPage() {
                 { key: "height_cm", label: "Height (cm)", min: 100, max: 250, ph: "e.g. 175" },
                 { key: "weight_kg", label: "Weight (kg)", min: 30,  max: 300, ph: "e.g. 70" },
               ].map(f => (
-                <div key={f.key}>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">{f.label}</label>
+                <div key={f.key} className="text-left font-sans">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-1.5">{f.label}</label>
                   <input type="number" min={f.min} max={f.max}
                     value={profile[f.key]} onChange={e => set(f.key, e.target.value)}
                     placeholder={f.ph}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
+                    className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all font-medium" />
                 </div>
               ))}
             </div>
@@ -230,7 +232,7 @@ export default function OnboardingPage() {
                 ))}
               </div>
               {profile.goals.length > 0 && (
-                <p className="text-xs text-indigo-500 text-center mt-3">
+                <p className="text-xs text-primary font-bold uppercase tracking-wider text-center mt-4 animate-pulse">
                   {profile.goals.length} goal{profile.goals.length > 1 ? "s" : ""} selected ✓
                 </p>
               )}
@@ -255,34 +257,34 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {error && <p className="text-sm text-red-500 mt-4 text-center">{error}</p>}
+          {error && <p className="text-sm font-bold text-red-500 mt-4 text-center">{error}</p>}
 
           {/* Nav buttons */}
           <div className="flex gap-3 mt-8">
             {step > 0 && (
               <button onClick={() => setStep(s => s - 1)}
-                className="flex-1 border border-gray-200 rounded-xl py-3 text-sm text-gray-600 hover:bg-gray-50 transition">
+                className="flex-1 border border-border rounded-xl py-3 text-sm font-bold text-muted-foreground bg-transparent hover:bg-accent transition-all duration-200">
                 ← Back
               </button>
             )}
             {step < STEPS.length - 1 ? (
               <button onClick={() => setStep(s => s + 1)} disabled={!canProceed()}
-                className={`flex-1 rounded-xl py-3 text-sm font-semibold transition
-                  ${canProceed() ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}>
+                className={`flex-1 rounded-xl py-3 text-sm font-black uppercase tracking-wider transition-all duration-200
+                  ${canProceed() ? "bg-primary text-primary-foreground hover:opacity-90 shadow-neon" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
                 Continue →
               </button>
             ) : (
               <button onClick={handleFinish} disabled={!canProceed() || loading}
-                className={`flex-1 rounded-xl py-3 text-sm font-semibold transition
-                  ${canProceed() && !loading ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-gray-100 text-gray-400 cursor-not-allowed"}`}>
+                className={`flex-1 rounded-xl py-3 text-sm font-black uppercase tracking-wider transition-all duration-200
+                  ${canProceed() && !loading ? "bg-primary text-primary-foreground hover:opacity-90 shadow-neon" : "bg-muted text-muted-foreground cursor-not-allowed"}`}>
                 {loading ? "Saving..." : "Let's Go 🚀"}
               </button>
             )}
           </div>
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-4">
-          <button onClick={() => navigate("/dashboard")} className="hover:underline">
+        <p className="text-center text-xs text-muted-foreground mt-4 font-medium">
+          <button onClick={() => navigate("/dashboard")} className="hover:text-foreground hover:underline transition">
             Skip for now
           </button>
         </p>

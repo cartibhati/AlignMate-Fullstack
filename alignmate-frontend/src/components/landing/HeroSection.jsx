@@ -23,78 +23,80 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="px-6">
-  <div className="max-w-6xl mx-auto py-24">
+    <section className="px-6 relative overflow-hidden bg-grid py-12 md:py-20">
+      <div className="max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
 
-      <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+          {/* LEFT CONTENT */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="space-y-6 text-left"
+          >
+            <h1 className="text-5xl md:text-7xl font-black leading-none uppercase tracking-tighter">
+              Master Your
+              <br />
+              <span className="bg-gradient-to-r from-primary to-emerald-500 dark:to-lime-300 bg-clip-text text-transparent">
+                Workout Form
+              </span>
+            </h1>
 
-        {/* LEFT CONTENT */}
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="space-y-6"
-        >
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-            Fix Your Posture
-            <br />
-            <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
-              In Real-Time
-            </span>
-          </h1>
+            <p className="text-lg text-muted-foreground font-medium leading-relaxed">
+              AlignMate uses real-time AI computer vision to analyze posture, 
+              track workout reps, and perfect your training form instantly. 
+              No wearables required.
+            </p>
 
-          <p className="text-lg text-gray-600 dark:text-gray-400">
-            AlignMate uses AI-powered posture detection to monitor,
-            correct, and improve your posture instantly.
-          </p>
-
-          <Link to="/live">
-            <button className="px-8 py-4 rounded-xl bg-primary text-primary-foreground shadow-lg hover:scale-[1.04] transition">
-              Start Live Session
-            </button>
-          </Link>
-        </motion.div>
-
-        {/* RIGHT IMAGE */}
-        <div className="relative w-full h-[420px]">
-
-          {images.map((img, i) => (
-            <motion.img
-              key={i}
-              src={img}
-              className="absolute inset-0 w-full h-full object-cover rounded-2xl border border-border shadow-2xl"
-              initial={false}
-              animate={{ opacity: i === index ? 1 : 0 }}
-              transition={{ duration: 0.8, ease: "easeInOut" }}
-            />
-          ))}
-
-          {/* UI OVERLAY PANEL */}
-          <div className="absolute bottom-4 left-4 right-4 bg-black/70 text-white 
-                          backdrop-blur-md rounded-xl p-4 shadow-lg">
-
-            <div className="flex items-center justify-between">
-
-              <div>
-                <p className="text-sm opacity-80">Posture Status</p>
-                <p className="text-lg font-semibold text-green-400">
-                  Good Alignment ✓
-                </p>
-              </div>
-
-              <div className="text-right">
-                <p className="text-xs opacity-70">Score</p>
-                <p className="text-lg font-bold">92%</p>
-              </div>
-
+            <div className="flex flex-wrap gap-4 pt-2">
+              <Link to="/live">
+                <button className="px-8 py-4 rounded-xl bg-primary text-primary-foreground font-extrabold uppercase tracking-wider shadow-neon hover:scale-[1.03] active:scale-[0.98] transition-all duration-300">
+                  Start Live Session
+                </button>
+              </Link>
+              <Link to="/exercise">
+                <button className="px-8 py-4 rounded-xl border-2 border-border bg-transparent text-foreground font-extrabold uppercase tracking-wider hover:bg-accent hover:border-accent active:scale-[0.98] transition-all duration-300">
+                  Explore Exercises
+                </button>
+              </Link>
             </div>
+          </motion.div>
 
+          {/* RIGHT IMAGE */}
+          <div className="relative w-full h-[450px]">
+            {images.map((img, i) => (
+              <motion.img
+                key={i}
+                src={img}
+                className="absolute inset-0 w-full h-full object-cover rounded-3xl border border-border shadow-2xl"
+                initial={false}
+                animate={{ opacity: i === index ? 1 : 0 }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+              />
+            ))}
+
+            {/* UI OVERLAY PANEL */}
+            <div className="absolute bottom-6 left-6 right-6 bg-black/60 text-white 
+                            backdrop-blur-lg rounded-2xl p-5 border border-white/10 shadow-neon-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-primary">Live Tracker</p>
+                  <p className="text-xl font-extrabold text-white mt-0.5">
+                    Form Score: <span className="text-emerald-400">92%</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] uppercase font-bold tracking-widest text-white/60">Status</p>
+                  <p className="text-sm font-black text-emerald-400 mt-0.5 bg-emerald-500/20 px-2.5 py-0.5 rounded-full inline-block border border-emerald-500/30">
+                    Perfect Form ✓
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
-
       </div>
-    </div>
     </section>
   );
 }

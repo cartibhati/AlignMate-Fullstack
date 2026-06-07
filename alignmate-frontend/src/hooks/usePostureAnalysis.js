@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useMemo } from "react";
+import { WS_BASE_URL } from "@/config";
 
 // ✅ Accept mode as a parameter
 export default function usePostureAnalysis(results, mode = "student") {
@@ -8,7 +9,7 @@ export default function usePostureAnalysis(results, mode = "student") {
 
   // ── 1. WebSocket connection ──────────────────────────────────────────────
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8000/ws");
+    const socket = new WebSocket(`${WS_BASE_URL}/ws`);
     socketRef.current = socket;
 
     socket.onopen = () => {

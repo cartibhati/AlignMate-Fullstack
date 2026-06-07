@@ -2,68 +2,107 @@
 @tailwind components;
 @tailwind utilities;
 
-/*LIGHT THEME  */
+/* GYM THEME - LIGHT MODE (Carbon Gray & Crimson Gym Red) */
 :root {
-  --background: 267 60% 96%;
-  --foreground: 267 40% 15%;
+  --background: 240 15% 97%; /* Very clean light slate gray */
+  --foreground: 240 10% 5%; /* Carbon black text */
 
-  --card: 0 0% 100%;
-  --card-foreground: 267 40% 15%;
+  --card: 0 0% 100%; /* White cards */
+  --card-foreground: 240 10% 5%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 267 40% 15%;
+  --popover-foreground: 240 10% 5%;
 
-  --primary: 267 50% 65%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 0 85% 55%; /* Bold Gym Crimson Red (#ef4444) */
+  --primary-foreground: 0 0% 100%; /* White text on red */
 
-  --secondary: 267 40% 90%;
-  --secondary-foreground: 267 60% 25%;
-  --muted: 267 20% 92%;
-  --muted-foreground: 267 10% 45%;
-  --accent: 267 40% 90%;
-  --accent-foreground: 267 60% 25%;
+  --secondary: 240 5% 90%;
+  --secondary-foreground: 240 10% 10%;
 
-  --destructive: 350 80% 75%;
-  --destructive-foreground: 350 60% 15%;
+  --muted: 240 5% 93%;
+  --muted-foreground: 240 5% 45%;
 
-  --border: 267 20% 85%;
-  --input: 267 20% 85%;
-  --ring: 267 50% 65%;
-  --radius: 1rem;
+  --accent: 240 5% 90%;
+  --accent-foreground: 240 10% 10%;
+
+  --destructive: 0 85% 50%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 240 5% 85%;
+  --input: 240 5% 85%;
+  --ring: 0 85% 55%;
+  
+  --radius: 0.75rem;
 }
 
-/* DARK THEME */
+/* GYM THEME - DARK MODE (Jet Black & Electric Neon Lime) */
 .dark {
-  --background: 240 10% 6%;
-  --foreground: 0 0% 98%;
+  --background: 240 10% 4%; /* Jet Black (#08080a) */
+  --foreground: 240 20% 98%; /* Silver/white text */
 
-  --card: 240 10% 10%;
-  --card-foreground: 0 0% 98%;
+  --card: 240 8% 8%; /* Deep Charcoal cards (#121216) */
+  --card-foreground: 240 20% 98%;
 
-  --popover: 240 10% 10%;
-  --popover-foreground: 0 0% 98%;
+  --popover: 240 8% 8%;
+  --popover-foreground: 240 20% 98%;
 
-  --primary: 267 70% 70%;
-  --primary-foreground: 240 10% 6%;
+  --primary: 74 100% 50%; /* Electric Neon Lime (#ccff00) */
+  --primary-foreground: 0 0% 0%; /* Jet Black text on neon for legibility */
 
-  --secondary: 240 6% 18%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 240 6% 14%; /* Dark steel gray */
+  --secondary-foreground: 240 10% 90%;
 
-  --muted: 240 6% 18%;
+  --muted: 240 6% 11%;
   --muted-foreground: 240 5% 65%;
 
-  --accent: 240 6% 18%;
-  --accent-foreground: 0 0% 98%;
+  --accent: 240 6% 14%;
+  --accent-foreground: 240 10% 90%;
 
-  --destructive: 350 70% 50%;
+  --destructive: 0 75% 50%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 240 6% 20%;
-  --input: 240 6% 20%;
-  --ring: 267 70% 70%;
+  --border: 240 6% 16%;
+  --input: 240 6% 16%;
+  --ring: 74 100% 50%;
 }
 
-/* Base */
+/* Base Body Styles */
 body {
-  @apply bg-background text-foreground transition-colors duration-300;
+  @apply bg-background text-foreground transition-colors duration-300 font-sans antialiased tracking-tight;
+}
+
+/* Custom Sport & Gym Design Helpers */
+@layer utilities {
+  /* Faint technical grid background for that sporty tracker vibe */
+  .bg-grid {
+    background-size: 30px 30px;
+    background-image: 
+      linear-gradient(to right, rgba(120, 120, 120, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(120, 120, 120, 0.05) 1px, transparent 1px);
+  }
+  
+  .dark .bg-grid {
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  }
+
+  /* Intense neon glows for buttons, targets and scores */
+  .shadow-neon {
+    box-shadow: 0 0 15px -3px hsl(var(--primary) / 0.5), 0 0 6px -2px hsl(var(--primary) / 0.3);
+  }
+  
+  .shadow-neon-lg {
+    box-shadow: 0 0 25px -5px hsl(var(--primary) / 0.6), 0 0 10px -3px hsl(var(--primary) / 0.4);
+  }
+  
+  /* Glassmorphism for panels */
+  .bg-glass {
+    backdrop-filter: blur(12px);
+    background-color: rgba(255, 255, 255, 0.75);
+  }
+  
+  .dark .bg-glass {
+    background-color: rgba(18, 18, 22, 0.7);
+  }
 }
