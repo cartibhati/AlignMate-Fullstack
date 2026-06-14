@@ -1,14 +1,13 @@
-# AlignMate/posture/exercises/shoulder_press.py
+# AlignMate/posture/exercises/face_pulls.py
 from .utils import angle_between
 
+class FacePullsAnalyzer:
+    name = "Face Pulls"
 
-class ShoulderPressAnalyzer:
-    name = "Shoulder Press"
+    PULL_ANGLE    = 100   # Elbows bent, rope pulled to face
+    EXTEND_ANGLE  = 145   # Arms extended straight towards pulley
 
-    DOWN_ANGLE = 80
-    UP_ANGLE   = 145
-
-    def __init__(self, target_reps=10):
+    def __init__(self, target_reps=12):
         self.target_reps = target_reps
         self.rep_count   = 0
         self.phase       = "idle"
@@ -18,7 +17,6 @@ class ShoulderPressAnalyzer:
 
         l_shoulder = p(11); l_elbow = p(13); l_wrist = p(15)
         r_shoulder = p(12); r_elbow = p(14); r_wrist = p(16)
-        l_hip      = p(23); r_hip   = p(24)
 
         # Select side with higher average visibility (left vs right)
         l_vis = (landmarks[11].get("visibility", 1) + landmarks[13].get("visibility", 1) + landmarks[15].get("visibility", 1)) / 3
@@ -26,9 +24,13 @@ class ShoulderPressAnalyzer:
 
         if l_vis > r_vis:
             elbow_angle = angle_between(l_shoulder, l_elbow, l_wrist)
+            active_elbow = l_elbow
+            active_shoulder = l_shoulder
             avg_vis = l_vis
         else:
             elbow_angle = angle_between(r_shoulder, r_elbow, r_wrist)
+            active_elbow = r_elbow
+            active_shoulder = r_shoulder
             avg_vis = r_vis
 
         if avg_vis < 0.5:
@@ -36,49 +38,46 @@ class ShoulderPressAnalyzer:
                 "rep_count": self.rep_count, "target": self.target_reps,
                 "phase": "idle", "angle": round(elbow_angle, 1),
                 "angle_label": "Elbow angle",
-                "feedback": ["Adjust camera — upper body needs to be visible"],
+                "feedback": ["Face the camera — upper body must be visible"],
                 "form_ok": False, "completed": False,
             }
 
         # ── Phase detection ───────────────────────────────────────────────
-        if elbow_angle < self.DOWN_ANGLE and self.phase in ["idle", "up"]:
-            self.phase = "down"
-        elif elbow_angle > self.UP_ANGLE and self.phase == "down":
+        if elbow_angle < self.PULL_ANGLE and self.phase in ["idle", "down"]:
             self.phase = "up"
             self.rep_count += 1
+        elif elbow_angle > self.EXTEND_ANGLE and self.phase == "up":
+            self.phase = "down"
 
         # ── Form checks ───────────────────────────────────────────────────
         feedback = []
         form_ok  = True
 
-        if self.phase == "up":
-            l_wrist_above = l_wrist[1] < l_elbow[1]
-            r_wrist_above = r_wrist[1] < r_elbow[1]
-            if not (l_wrist_above and r_wrist_above):
-                feedback.append("Press fully overhead — lockout arms")
-                form_ok = False
-            else:
-                feedback.append("Great press! Lower with control")
-
-        elif self.phase == "down":
-            # ✅ FIXED: much more lenient elbow flare check (2.0x instead of 1.5x)
-            shoulder_width = abs(l_shoulder[0] - r_shoulder[0])
-            elbow_width    = abs(l_elbow[0]    - r_elbow[0])
-            if shoulder_width > 0.05 and elbow_width > shoulder_width * 2.0:
-                feedback.append("Elbows flaring wide — bring them in slightly")
-                form_ok = False
-            else:
-                feedback.append("Good position — press it up!")
-
-        else:
-            feedback.append("Bring weights to shoulder height to begin")
-
-        # ✅ FIXED: more lenient back lean check
-        avg_hip_y      = (l_hip[1]      + r_hip[1])      / 2
-        avg_shoulder_y = (l_shoulder[1] + r_shoulder[1]) / 2
-        if avg_shoulder_y < avg_hip_y - 0.45:   # was 0.35
-            feedback.append("Leaning back too much — brace your core")
+        # Check if elbows are high (Y coordinate of elbow should be close to or higher than shoulder coordinate)
+        # Note: in MediaPipe, smaller Y is higher on the screen.
+        # If elbow Y is significantly larger than shoulder Y (i.e. elbow is lower), the user is dropping their elbows.
+        if active_elbow[1] > active_shoulder[1] + 0.08:
+            feedback.append("Keep your elbows high — level with shoulders")
             form_ok = False
+
+        if self.phase == "idle":
+            if elbow_angle < self.EXTEND_ANGLE:
+                feedback.append("Extend your arms straight to start")
+                form_ok = False
+            else:
+                feedback.append("Ready — pull the rope towards your face!")
+        elif self.phase == "down":
+            if elbow_angle < self.EXTEND_ANGLE - 15:
+                feedback.append("Extend fully for maximum rear delt stretch")
+                form_ok = False
+            elif form_ok:
+                feedback.append("Good extension — pull back again")
+        elif self.phase == "up":
+            if elbow_angle > self.PULL_ANGLE + 15:
+                feedback.append("Pull further back towards your ears")
+                form_ok = False
+            elif form_ok:
+                feedback.append("Great pull! Squeeze your upper back and rear delts")
 
         return {
             "rep_count":   self.rep_count,

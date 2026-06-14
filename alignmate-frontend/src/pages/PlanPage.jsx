@@ -14,15 +14,24 @@ const GOAL_LABELS = {
 
 // ── Client-side exercise mapper ───────────────────────────────────────────────
 const KEYWORD_MAP = {
-  "bench": "bench_press", "chest press": "bench_press", "incline": "bench_press",
+  "bench": "bench_press", "chest press": "bench_press", "incline press": "bench_press",
   "decline": "bench_press", "dumbbell press": "bench_press",
-  "squat": "squat", "goblet": "squat", "leg press": "squat", "box squat": "squat",
+  "incline dumbbell press": "incline_dumbbell_press",
+  "squat": "squat", "goblet": "squat", "box squat": "squat",
+  "leg press": "leg_press",
+  "bodyweight squat": "bodyweight_squat",
   "deadlift": "deadlift", "romanian": "deadlift", "rdl": "deadlift", "sumo": "deadlift",
+  "single leg deadlift": "single_leg_deadlift",
   "row": "barbell_row", "bent over": "barbell_row", "cable row": "barbell_row",
+  "lat pulldown": "lat_pulldown", "pulldown": "lat_pulldown",
+  "face pull": "face_pulls", "facepull": "face_pulls",
   "overhead press": "shoulder_press", "shoulder press": "shoulder_press",
   "military press": "shoulder_press", "ohp": "shoulder_press", "arnold": "shoulder_press",
   "push-up": "pushup", "push up": "pushup", "pushup": "pushup",
+  "pike pushup": "pike_pushup", "pike push-up": "pike_pushup",
+  "incline pushup": "incline_pushup", "incline push-up": "incline_pushup",
   "lunge": "lunge", "split squat": "lunge", "bulgarian": "lunge", "step up": "lunge",
+  "plank shoulder taps": "plank_shoulder_taps", "shoulder tap": "plank_shoulder_taps",
   "plank": "plank",
   "curl": "bicep_curl", "bicep": "bicep_curl", "hammer curl": "bicep_curl",
   "lateral": "lateral_raise", "side raise": "lateral_raise",
@@ -170,10 +179,16 @@ export default function PlanPage() {
               {GOAL_LABELS[profile.goal] ?? profile.goal} · {profile.level} · {profile.equipment}
             </p>
           </div>
-          <button onClick={handleRegenerate}
-            className="text-xs border border-border px-4 py-2 rounded-xl text-foreground font-bold hover:bg-accent transition">
-            🔄 Regenerate
-          </button>
+          <div className="flex gap-2">
+            <button onClick={() => navigate("/profile")}
+              className="text-xs border border-border px-4 py-2 rounded-xl text-foreground font-bold hover:bg-accent transition">
+              ✏️ Edit Profile Settings
+            </button>
+            <button onClick={handleRegenerate}
+              className="text-xs bg-primary text-primary-foreground px-4 py-2 rounded-xl font-bold hover:opacity-90 shadow-neon transition">
+              🔄 Regenerate Plan
+            </button>
+          </div>
         </div>
       </div>
 

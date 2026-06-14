@@ -65,7 +65,8 @@ export default function ProfilePage() {
   const navigate              = useNavigate();
   const profile         = user?.profile ?? {};
 
-  const [editing, setEditing] = useState(false);
+  const hasIncompleteProfile = !profile.age || !profile.height_cm || !profile.weight_kg;
+  const [editing, setEditing] = useState(hasIncompleteProfile);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError]     = useState("");
@@ -98,15 +99,55 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     if (!user?.id) return;
+
+    // Input Validation
+    const ageVal = parseInt(form.age);
+    const heightVal = parseFloat(form.height_cm);
+    const weightVal = parseFloat(form.weight_kg);
+
+    if (isNaN(ageVal) || ageVal < 10 || ageVal > 100) {
+      setError("Please enter a valid age between 10 and 100.");
+      return;
+    }
+    if (isNaN(heightVal) || heightVal < 100 || heightVal > 250) {
+      setError("Please enter a valid height between 100 and 250 cm.");
+      return;
+    }
+    if (isNaN(weightVal) || weightVal < 30 || weightVal > 300) {
+      setError("Please enter a valid weight between 30 and 300 kg.");
+      return;
+    }
+    if (!form.lifestyle) {
+      setError("Please select a lifestyle option.");
+      return;
+    }
+    if (!form.level) {
+      setError("Please select an experience level.");
+      return;
+    }
+    if (form.goals.length === 0) {
+      setError("Please select at least one goal.");
+      return;
+    }
+    if (!form.equipment) {
+      setError("Please select an equipment option.");
+      return;
+    }
+    if (!form.diet) {
+      setError("Please select a diet preference.");
+      return;
+    }
+
     setLoading(true); setError(""); setSuccess(false);
     try {
       const res = await fetch(`${API}/profile/${user.id}`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body:    JSON.stringify({
-          age:       parseInt(form.age),
-          height_cm: parseFloat(form.height_cm),
-          weight_kg: parseFloat(form.weight_kg),
+          age:       ageVal,
+          height_cm: heightVal,
+          weight_kg: weightVal,
           lifestyle: form.lifestyle,
           level:     form.level,
           goal:      form.goals.join(","),

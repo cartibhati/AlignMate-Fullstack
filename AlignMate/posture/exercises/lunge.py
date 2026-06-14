@@ -25,10 +25,10 @@ class LungeAnalyzer:
         r_angle = angle_between(r_hip, r_knee, r_ankle)
         knee_angle = min(l_angle, r_angle)
 
-        # ── Visibility check ──────────────────────────────────────────────
-        key_lms = [landmarks[23], landmarks[25], landmarks[27],
-                   landmarks[24], landmarks[26], landmarks[28]]
-        avg_vis = sum(lm.get("visibility", 1) for lm in key_lms) / len(key_lms)
+        # Select side with higher average visibility (left vs right)
+        l_vis = (landmarks[23].get("visibility", 1) + landmarks[25].get("visibility", 1) + landmarks[27].get("visibility", 1)) / 3
+        r_vis = (landmarks[24].get("visibility", 1) + landmarks[26].get("visibility", 1) + landmarks[28].get("visibility", 1)) / 3
+        avg_vis = max(l_vis, r_vis)
         if avg_vis < 0.5:
             return {
                 "rep_count": self.rep_count, "target": self.target_reps,

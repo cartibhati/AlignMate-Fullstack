@@ -87,6 +87,10 @@ KEYWORD_MAP = {
     "glute bridge":    "hip_thrust",
     "hip bridge":      "hip_thrust",
     "barbell hip":     "hip_thrust",
+
+    # Face pull variations
+    "face pull":       "face_pulls",
+    "facepull":        "face_pulls",
 }
 
 

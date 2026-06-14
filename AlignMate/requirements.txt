@@ -14,3 +14,6 @@ pymysql
 passlib[bcrypt]
 python-multipart
 email-validator
+pytest
+httpx
+pyjwt

@@ -25,7 +25,12 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -258,8 +263,13 @@ async def exercise_websocket(websocket: WebSocket):
             # ── Switch exercise if changed ────────────────────────────────
             incoming_ex = msg.get("exercise")
             if incoming_ex and incoming_ex != exercise_key:
-                if incoming_ex in EXERCISE_MAP:
-                    exercise_key = incoming_ex
+                mapped_ex = incoming_ex
+                if mapped_ex not in EXERCISE_MAP:
+                    from posture.exercise_mapper import map_exercise_name
+                    mapped_ex = map_exercise_name(incoming_ex) or incoming_ex
+
+                if mapped_ex in EXERCISE_MAP:
+                    exercise_key = mapped_ex
                     target_reps  = msg.get("target_reps", 10)
                     analyzer     = EXERCISE_MAP[exercise_key](target_reps=target_reps)
                     print(f"[EXERCISE] Exercise: {exercise_key}")

@@ -1,28 +1,30 @@
 // src/components/layout/Sidebar.jsx
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useContext } from "react";
 import { AuthContext } from "@/context/AuthContext";
 import { useTheme } from "@/context/useTheme";
 import {
   LayoutDashboard, Activity, CalendarDays, ClipboardList,
-  FlaskConical, Info, Sun, Moon, LogOut, X, UserCircle, Dumbbell
+  FlaskConical, Info, Sun, Moon, LogOut, X, UserCircle, Dumbbell, GraduationCap
 } from "lucide-react";
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard",    icon: LayoutDashboard },
-  { to: "/live",      label: "Live Posture", icon: Activity },
-  { to: "/exercise",  label: "Exercises",    icon: Dumbbell },      // ✅ NEW
-  { to: "/plan",      label: "My Plan",      icon: ClipboardList },
-  { to: "/calendar",  label: "Calendar",     icon: CalendarDays },
-  { to: "/profile",   label: "Profile",      icon: UserCircle },
-  { to: "/research",  label: "Research",     icon: FlaskConical },
-  { to: "/about",     label: "About",        icon: Info },
+  { to: "/dashboard",          label: "Dashboard",        icon: LayoutDashboard },
+  { to: "/live?mode=student",  label: "Student Posture",  icon: GraduationCap },
+  { to: "/live?mode=athlete",  label: "Athlete Posture",  icon: Activity },
+  { to: "/exercise",           label: "Exercises Plan",   icon: Dumbbell },
+  { to: "/plan",               label: "My Plan",          icon: ClipboardList },
+  { to: "/calendar",           label: "Calendar",         icon: CalendarDays },
+  { to: "/profile",            label: "Profile",          icon: UserCircle },
+  { to: "/research",           label: "Research",         icon: FlaskConical },
+  { to: "/about",              label: "About",            icon: Info },
 ];
 
 export default function Sidebar({ open, onClose }) {
   const { user, logout, isAuthenticated } = useContext(AuthContext);
   const { theme, toggleTheme }            = useTheme();
   const navigate                          = useNavigate();
+  const location                          = useLocation();
 
   const calKey    = `alignmate_calendar_${user?.email ?? ""}`;
   const completed = JSON.parse(localStorage.getItem(calKey) ?? "[]");
@@ -39,6 +41,13 @@ export default function Sidebar({ open, onClose }) {
   })();
 
   const handleLogout = () => { logout(); onClose(); navigate("/login"); };
+
+  const isLinkActive = (to) => {
+    const [pathname, search] = to.split("?");
+    if (location.pathname !== pathname) return false;
+    if (!search) return !location.search;
+    return location.search.includes(search);
+  };
 
   return (
     <>
@@ -95,17 +104,19 @@ export default function Sidebar({ open, onClose }) {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {NAV.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200
-                ${isActive
-                  ? "bg-primary text-primary-foreground shadow-neon shadow-sm"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
-              <Icon size={18} />
-              {label}
-            </NavLink>
-          ))}
+          {NAV.map(({ to, label, icon: Icon }) => {
+            const active = isLinkActive(to);
+            return (
+              <NavLink key={to} to={to} onClick={onClose}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold transition-all duration-200
+                  ${active
+                    ? "bg-primary text-primary-foreground shadow-neon shadow-sm"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"}`}>
+                <Icon size={18} />
+                {label}
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* Bottom */}

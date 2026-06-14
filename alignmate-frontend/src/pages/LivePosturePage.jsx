@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useContext } from "react";
+import { useSearchParams } from "react-router-dom";
 import CameraFeed from "@/components/camera/CameraFeed";
 import FeedbackBanner from "@/components/posture/FeedBackBanner";
 import AngleMetrics from "@/components/posture/AngleMetrics";
@@ -11,28 +12,39 @@ import SessionSummaryModel from "@/components/posture/SessionSummaryModel";
 import ConnectionStatus from "@/components/common/ConnectionStatus";
 import { AuthContext } from "@/context/AuthContext";
 import { saveSession } from "@/services/sessionStorage";
+import VoiceCoachSettings from "@/components/posture/VoiceCoachSettings";
+import { Play, Pause, RotateCcw, CheckSquare, Square } from "lucide-react";
 
-const MODE_STYLES = {
-  student: { bg: "bg-primary/10 border-primary/20",   text: "text-primary border",   label: "🎓 Student" },
-  athlete: { bg: "bg-orange-500/10 border-orange-500/20", text: "text-orange-500 border", label: "🏋️ Athlete" },
-  both:    { bg: "bg-purple-500/10 border-purple-500/20", text: "text-purple-500 border", label: "⚡ Both"    },
+const MODE_THEMES = {
+  student: {
+    accent: "text-blue-500 dark:text-sky-400",
+    bg: "bg-blue-500/10 border-blue-500/20 dark:bg-sky-500/10 dark:border-sky-sky-500/20",
+    border: "border-blue-500/30 dark:border-sky-400/20",
+    btn: "bg-blue-500 hover:bg-blue-600 text-white shadow-[0_0_15px_-3px_rgba(59,130,246,0.4)]",
+    bullet: "bg-blue-500",
+    label: "🎓 Student Study",
+  },
+  athlete: {
+    accent: "text-primary",
+    bg: "bg-primary/10 border-primary/20",
+    border: "border-primary/20",
+    btn: "bg-primary text-primary-foreground shadow-neon",
+    bullet: "bg-primary",
+    label: "🏋️ Athlete Performance",
+  },
 };
 
 export default function LivePosturePage() {
   const { user } = useContext(AuthContext);
-
-  const [mode] = useState(
-    () => localStorage.getItem("alignmate_mode") || "student"
-  );
+  const [searchParams] = useSearchParams();
+  const mode = searchParams.get("mode") === "athlete" ? "athlete" : "student";
 
   const [poseResults, setPoseResults] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
-
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const { speak, cancel } = useVoiceAlert(mode);
 
-  const { data: rawAnalysis, connectionStatus } =
-    usePostureAnalysis(poseResults, mode);
+  const { speak, cancel } = useVoiceAlert(mode);
+  const { data: rawAnalysis, connectionStatus } = usePostureAnalysis(poseResults, mode);
 
   // ── Score smoothing ──────────────────────────────────────────────────────
   const score       = rawAnalysis?.score ?? 0;
@@ -118,6 +130,66 @@ export default function LivePosturePage() {
     enabled:         connectionStatus === "connected",
   });
 
+  // ── Pomodoro Timer (Student Mode Widget) ──────────────────────────────────
+  const [pomoTime, setPomoTime] = useState(25 * 60);
+  const [pomoActive, setPomoActive] = useState(false);
+  const [pomoMode, setPomoMode] = useState("study"); // study | break
+
+  useEffect(() => {
+    let id = null;
+    if (pomoActive && pomoTime > 0) {
+      id = setInterval(() => setPomoTime(t => t - 1), 1000);
+    } else if (pomoTime === 0) {
+      setPomoActive(false);
+      if (pomoMode === "study") {
+        setPomoMode("break");
+        setPomoTime(5 * 60);
+        if (window.speechSynthesis) {
+          const u = new SpeechSynthesisUtterance("Great focus session! Take a 5 minute break to stretch your back.");
+          window.speechSynthesis.speak(u);
+        }
+      } else {
+        setPomoMode("study");
+        setPomoTime(25 * 60);
+        if (window.speechSynthesis) {
+          const u = new SpeechSynthesisUtterance("Break is over. Ready to focus? Let's check your sitting posture.");
+          window.speechSynthesis.speak(u);
+        }
+      }
+    }
+    return () => clearInterval(id);
+  }, [pomoActive, pomoTime, pomoMode]);
+
+  const togglePomo = () => setPomoActive(!pomoActive);
+  const resetPomo = () => {
+    setPomoActive(false);
+    setPomoTime(pomoMode === "study" ? 25 * 60 : 5 * 60);
+  };
+
+  const formatPomo = (s) => {
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
+
+  // ── Ergonomics Checklist (Student Mode Widget) ────────────────────────────
+  const [ergoChecklist, setErgoChecklist] = useState([
+    { id: 1, label: "Screen at eye level (no neck tilting)", checked: false },
+    { id: 2, label: "Lower back fully supported by chair", checked: false },
+    { id: 3, label: "Feet flat on the floor, hips pushed back", checked: false },
+    { id: 4, label: "Shoulders relaxed, elbows at 90° angle", checked: false },
+    { id: 5, label: "Keep study area bright & glare-free", checked: false },
+  ]);
+
+  const toggleCheck = (id) => {
+    setErgoChecklist(prev =>
+      prev.map(item => (item.id === id ? { ...item, checked: !item.checked } : item))
+    );
+  };
+
+  const checkedCount = ergoChecklist.filter(item => item.checked).length;
+  const ergoProgress = Math.round((checkedCount / ergoChecklist.length) * 100);
+
   // ── End session ──────────────────────────────────────────────────────────
   const handleEndSession = async () => {
     cancel();
@@ -139,7 +211,7 @@ export default function LivePosturePage() {
         badDuration: finalBadSecs,
         score:       finalAvgScore,
         feedback:    analysis.feedback,
-        aiFeedback,                    // ✅ save AI summary
+        aiFeedback,
         mode,
       });
     }
@@ -164,37 +236,41 @@ export default function LivePosturePage() {
   };
 
   const fmt = (s) => s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
-  const modeStyle = MODE_STYLES[mode] || MODE_STYLES.student;
+  const theme = MODE_THEMES[mode] || MODE_THEMES.student;
 
   return (
     <div className="h-screen flex bg-background overflow-hidden font-sans">
-
+      {/* Camera feed */}
       <div className="w-2/3 flex items-center justify-center bg-black border-r border-border">
         <CameraFeed onPoseResults={setPoseResults} />
       </div>
 
+      {/* Control panel */}
       <div className="w-1/3 p-6 flex flex-col gap-6 bg-card border-l border-border overflow-y-auto text-left">
-
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-black uppercase tracking-tight text-foreground">Live Analysis</h2>
           <ConnectionStatus status={connectionStatus} />
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${modeStyle.bg} ${modeStyle.text}`}>
-            {modeStyle.label} mode
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className={`inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider border ${theme.bg} ${theme.accent}`}>
+            {theme.label} Mode
           </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => { if (voiceEnabled) cancel(); setVoiceEnabled((v) => !v); }}
-            className={`text-xs px-3.5 py-1 rounded-full border transition-all duration-200 ${
-              voiceEnabled ? "bg-primary text-primary-foreground border-primary font-bold shadow-neon" : "bg-transparent text-muted-foreground border-border hover:bg-accent"
+            className={`text-xs px-3.5 py-2.5 rounded-xl border transition-all duration-200 flex-1 ${
+              voiceEnabled ? theme.btn + " font-bold" : "bg-transparent text-muted-foreground border-border hover:bg-accent"
             }`}
           >
             {voiceEnabled ? "🔊 Voice On" : "🔇 Voice Off"}
           </button>
+          <VoiceCoachSettings />
         </div>
 
-        <button onClick={handleEndSession} className="bg-red-500 hover:bg-red-600 text-white font-extrabold uppercase tracking-wider py-3 rounded-xl shadow-lg shadow-red-500/15 transition-all">
+        <button onClick={handleEndSession} className="bg-red-500 hover:bg-red-600 text-white font-extrabold uppercase tracking-wider py-3.5 rounded-xl shadow-lg shadow-red-500/15 transition-all">
           End Session
         </button>
 
@@ -204,9 +280,72 @@ export default function LivePosturePage() {
           </div>
         )}
 
-        <PostureScoreRing score={analysis.score} />
+        {/* Double Dashboard Grid: Score Ring + Dynamic Mode Widget */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <PostureScoreRing score={analysis.score} />
+          
+          {/* Dynamic mode-specific widgets */}
+          {mode === "student" ? (
+            <div className="border border-border rounded-2xl bg-card p-4 flex flex-col justify-between hover:border-primary/20 transition-all duration-300">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Pomodoro Focus</p>
+                <p className="text-3xl font-black font-display text-foreground leading-none mt-1">
+                  {formatPomo(pomoTime)}
+                </p>
+                <p className="text-[10px] font-bold text-blue-500 dark:text-sky-400 uppercase mt-2">
+                  {pomoMode === "study" ? "📝 Study Session" : "☕ Short Break"}
+                </p>
+              </div>
+              
+              <div className="flex gap-2 mt-3">
+                <button onClick={togglePomo} className="flex-1 bg-muted/60 hover:bg-accent p-2 rounded-lg flex items-center justify-center text-foreground transition-all">
+                  {pomoActive ? <Pause size={14} /> : <Play size={14} />}
+                </button>
+                <button onClick={resetPomo} className="flex-1 bg-muted/60 hover:bg-accent p-2 rounded-lg flex items-center justify-center text-foreground transition-all">
+                  <RotateCcw size={14} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="border border-border rounded-2xl bg-card p-4 flex flex-col justify-between hover:border-primary/20 transition-all duration-300">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Precision Target</p>
+                <p className="text-3xl font-black font-display text-primary leading-none mt-1">Stricter</p>
+                <p className="text-[10px] text-muted-foreground mt-2 leading-relaxed">
+                  Posture thresholds are adjusted to keep your back fully aligned during intensive training sessions.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
         <FeedbackBanner feedback={analysis.feedback} />
         <AngleMetrics metrics={analysis.metrics} />
+
+        {/* Ergonomics widget (Student mode only) */}
+        {mode === "student" && (
+          <div className="bg-card rounded-2xl p-5 border border-border space-y-3">
+            <div className="flex justify-between items-center">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">📐 Desk Ergonomics</p>
+              <span className="text-xs font-black font-display text-blue-500 dark:text-sky-400">{ergoProgress}%</span>
+            </div>
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500 dark:bg-sky-400 rounded-full transition-all duration-300" style={{ width: `${ergoProgress}%` }} />
+            </div>
+            <div className="space-y-2 mt-2">
+              {ergoChecklist.map((item) => (
+                <button key={item.id} onClick={() => toggleCheck(item.id)} className="w-full flex items-start gap-2.5 text-left text-xs text-foreground hover:bg-muted/30 p-1.5 rounded-lg transition-colors font-medium">
+                  {item.checked ? (
+                    <CheckSquare size={14} className="text-blue-500 dark:text-sky-400 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <Square size={14} className="text-muted-foreground mt-0.5 flex-shrink-0" />
+                  )}
+                  <span className={item.checked ? "line-through text-muted-foreground/75" : ""}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* AI Coach panel */}
         <div className="bg-muted/40 rounded-2xl p-5 border border-border">
@@ -220,6 +359,7 @@ export default function LivePosturePage() {
           )}
         </div>
 
+        {/* Session Stats Grid */}
         <div className="grid grid-cols-3 gap-2 text-center text-xs">
           <div className="bg-muted/50 border border-border rounded-xl p-3">
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Session</p>
@@ -229,9 +369,11 @@ export default function LivePosturePage() {
             <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-1">Bad posture</p>
             <p className="font-extrabold text-red-500 font-display text-sm">{fmt(totalBadSecs)}</p>
           </div>
-          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-            <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider mb-1">Good time</p>
-            <p className="font-extrabold text-emerald-500 font-display text-sm">
+          <div className={`border rounded-xl p-3 ${
+            mode === "student" ? "bg-blue-500/10 border-blue-500/20 text-blue-500 dark:text-sky-400" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+          }`}>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-1">Good time</p>
+            <p className="font-extrabold font-display text-sm">
               {sessionSeconds > 0
                 ? `${Math.max(0, Math.round(((sessionSeconds - totalBadSecs) / sessionSeconds) * 100))}%`
                 : "100%"}

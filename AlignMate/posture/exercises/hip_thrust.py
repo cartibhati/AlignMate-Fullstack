@@ -21,15 +21,17 @@ class HipThrustAnalyzer:
         l_hip      = p(23); r_hip      = p(24)
         l_knee     = p(25); r_knee     = p(26)
 
-        # Hip angle = angle at hip between shoulder-hip-knee
-        l_angle = angle_between(l_shoulder, l_hip, l_knee)
-        r_angle = angle_between(r_shoulder, r_hip, r_knee)
-        hip_angle = (l_angle + r_angle) / 2
+        # Select side with higher average visibility (left vs right)
+        l_vis = (landmarks[11].get("visibility", 1) + landmarks[23].get("visibility", 1) + landmarks[25].get("visibility", 1)) / 3
+        r_vis = (landmarks[12].get("visibility", 1) + landmarks[24].get("visibility", 1) + landmarks[26].get("visibility", 1)) / 3
 
-        # ── Visibility ────────────────────────────────────────────────────
-        key_lms = [landmarks[23], landmarks[25], landmarks[11],
-                   landmarks[24], landmarks[26], landmarks[12]]
-        avg_vis = sum(lm.get("visibility", 1) for lm in key_lms) / len(key_lms)
+        if l_vis > r_vis:
+            hip_angle = angle_between(l_shoulder, l_hip, l_knee)
+            avg_vis = l_vis
+        else:
+            hip_angle = angle_between(r_shoulder, r_hip, r_knee)
+            avg_vis = r_vis
+
         if avg_vis < 0.5:
             return {
                 "rep_count": self.rep_count, "target": self.target_reps,

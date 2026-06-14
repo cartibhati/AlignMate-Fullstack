@@ -1,18 +1,34 @@
-FROM node:20-alpine
+# Stage 1: Build the React application
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package management files
+# Copy package configuration files
 COPY package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy application files
+# Copy source files
 COPY . .
 
-# Expose port
-EXPOSE 5173
+# Set Vite build environment variables
+ARG VITE_API_URL=http://localhost:8000
+ENV VITE_API_URL=$VITE_API_URL
 
-# Start Vite server binding to all network interfaces
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+# Build static assets
+RUN npm run build
+
+# Stage 2: Serve the application with Nginx
+FROM nginx:alpine
+
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Copy build output to Nginx public folder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

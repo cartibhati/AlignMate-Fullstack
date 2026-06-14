@@ -11,6 +11,7 @@ from .hip_thrust     import HipThrustAnalyzer
 from .bench_press    import BenchPressAnalyzer
 from .barbell_row    import BarbellRowAnalyzer
 from .tricep_dip     import TricepDipAnalyzer
+from .face_pulls      import FacePullsAnalyzer
 
 EXERCISE_MAP = {
     "squat":          SquatAnalyzer,
@@ -25,4 +26,5 @@ EXERCISE_MAP = {
     "bench_press":    BenchPressAnalyzer,
     "barbell_row":    BarbellRowAnalyzer,
     "tricep_dip":     TricepDipAnalyzer,
+    "face_pulls":     FacePullsAnalyzer,
 }

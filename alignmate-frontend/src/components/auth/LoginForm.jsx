@@ -48,7 +48,7 @@ export default function LoginForm() {
         return;
       }
 
-      navigate("/live");
+      navigate("/dashboard");
     } catch (err) {
       console.error(err);
       setServerError("Something went wrong");

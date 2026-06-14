@@ -26,8 +26,27 @@ class PlankAnalyzer:
         avg_hip_y      = (l_hip[1]      + r_hip[1])      / 2
         avg_ankle_y    = (l_ankle[1]    + r_ankle[1])    / 2
 
+        # Select side with higher average visibility (left vs right)
+        l_vis = (landmarks[11].get("visibility", 1) + landmarks[23].get("visibility", 1) + landmarks[27].get("visibility", 1)) / 3
+        r_vis = (landmarks[12].get("visibility", 1) + landmarks[24].get("visibility", 1) + landmarks[28].get("visibility", 1)) / 3
+        avg_vis = max(l_vis, r_vis)
+
+        if avg_vis < 0.5:
+            return {
+                "rep_count":    self.sets_done,
+                "target":       self.total_sets,
+                "phase":        "idle",
+                "angle":        round(self.elapsed, 1),
+                "angle_label":  "Hold time (s)",
+                "elapsed":      round(self.elapsed, 1),
+                "set_target":   self.SET_SECS,
+                "feedback":     ["Make sure your body is visible in the frame"],
+                "form_ok":      False,
+                "completed":    self.sets_done >= self.total_sets,
+            }
+
         body_range  = abs(avg_ankle_y - avg_shoulder_y)
-        in_position = body_range < 0.25
+        in_position = body_range < 0.35
 
         feedback = []
         form_ok  = True

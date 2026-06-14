@@ -1,86 +1,76 @@
-// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { Camera, Brain, Activity } from "lucide-react";
 
 const steps = [
   {
     icon: Camera,
-    title: "Capture",
-    desc: "Use your webcam to track your posture in real-time.",
+    title: "1. Capture",
+    desc: "Turn on your webcam. The app handles everything else with client-side detection.",
   },
   {
     icon: Brain,
-    title: "Analyze",
-    desc: "AI detects posture issues instantly using pose estimation.",
+    title: "2. Analyze",
+    desc: "AI extracts skeletal keypoints and verifies alignment angles instantly.",
   },
   {
     icon: Activity,
-    title: "Improve",
-    desc: "Get live feedback and correct your posture immediately.",
+    title: "3. Improve",
+    desc: "Receive real-time audio corrections to fix your form and prevent injuries.",
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="px-6">
-  <div className="max-w-6xl mx-auto py-24">
-
-      <div className="max-w-6xl mx-auto text-center">
-
+    <section className="px-6 bg-[#08080a] py-20 text-white">
+      <div className="max-w-6xl mx-auto">
+        
         {/* SECTION TITLE */}
-        <motion.h2
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-3xl md:text-4xl font-bold mb-12"
-        >
-          How It Works
-        </motion.h2>
+        <div className="text-center mb-16">
+          <span className="text-xs bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full font-black uppercase tracking-wider">
+            Simple Process
+          </span>
+          <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mt-4">
+            How It Works
+          </h2>
+          <p className="text-gray-400 text-sm mt-3 max-w-lg mx-auto">
+            Get started in seconds. No setup, calibration, or external sensors required.
+          </p>
+        </div>
 
         {/* STEPS */}
-        <div className="grid md:grid-cols-3 gap-10 relative">
-
+        <div className="grid md:grid-cols-3 gap-8">
           {steps.map((step, index) => {
             const Icon = step.icon;
 
             return (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="relative flex flex-col items-center text-center"
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.15 }}
+                className="bg-[#12141c] border border-white/5 rounded-3xl p-8 hover:border-primary/20 hover:-translate-y-1 transition-all duration-300 relative group"
               >
-
                 {/* ICON */}
-                <div className="w-16 h-16 flex items-center justify-center 
-                                rounded-full bg-primary/10 text-primary mb-4">
-                  <Icon size={28} />
+                <div className="w-14 h-14 flex items-center justify-center rounded-2xl bg-primary/10 text-primary mb-6 group-hover:scale-110 transition-transform duration-300">
+                  <Icon size={24} />
                 </div>
 
                 {/* TITLE */}
-                <h3 className="text-lg font-semibold mb-2">
+                <h3 className="text-lg font-black uppercase tracking-tight mb-3 text-white">
                   {step.title}
                 </h3>
 
                 {/* DESCRIPTION */}
-                <p className="text-gray-600 dark:text-gray-400 text-sm max-w-xs">
+                <p className="text-gray-400 text-xs font-medium leading-relaxed">
                   {step.desc}
                 </p>
-
-                {/* CONNECTOR LINE (only for first 2 items) */}
-                {index !== steps.length - 1 && (
-                  <div className="hidden md:block absolute top-8 left-[60%] w-full h-[2px] bg-border" />
-                )}
-
               </motion.div>
             );
           })}
-
         </div>
 
       </div>
-    </div>
     </section>
   );
 }

@@ -1,6 +1,7 @@
 // src/pages/OnboardingPage.jsx
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "@/context/AuthContext";
 
 import { API_BASE_URL } from "@/config";
 
@@ -89,7 +90,7 @@ function MultiOptionCard({ option, selected, onToggle }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function OnboardingPage() {
   const navigate = useNavigate();
-  const user     = JSON.parse(localStorage.getItem("currentUser") || "{}");
+  const { user, updateUser } = useContext(AuthContext);
 
   const [step, setStep]       = useState(0);
   const [loading, setLoading] = useState(false);
@@ -133,6 +134,7 @@ export default function OnboardingPage() {
       const res = await fetch(`${API}/profile/${user.id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           age:       parseInt(profile.age),
           height_cm: parseFloat(profile.height_cm),
@@ -146,10 +148,11 @@ export default function OnboardingPage() {
       });
       if (!res.ok) throw new Error("Failed to save profile");
 
-      localStorage.setItem("currentUser", JSON.stringify({
+      const updatedUser = {
         ...user,
         profile: { ...profile, goal: profile.goals.join(",") },
-      }));
+      };
+      updateUser(updatedUser);
       navigate("/dashboard");
     } catch {
       setError("Failed to save profile. Please try again.");

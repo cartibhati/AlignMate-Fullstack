@@ -21,15 +21,17 @@ class LateralRaiseAnalyzer:
         l_shoulder = p(11); l_elbow = p(13); l_wrist = p(15)
         r_shoulder = p(12); r_elbow = p(14); r_wrist = p(16)
 
-        # Wrist height relative to shoulder (negative = above shoulder)
-        l_diff = l_wrist[1] - l_shoulder[1]
-        r_diff = r_wrist[1] - r_shoulder[1]
-        avg_diff = (l_diff + r_diff) / 2
+        # Select side with higher average visibility (left vs right)
+        l_vis = (landmarks[11].get("visibility", 1) + landmarks[13].get("visibility", 1) + landmarks[15].get("visibility", 1)) / 3
+        r_vis = (landmarks[12].get("visibility", 1) + landmarks[14].get("visibility", 1) + landmarks[16].get("visibility", 1)) / 3
 
-        # ── Visibility ────────────────────────────────────────────────────
-        key_lms = [landmarks[11], landmarks[13], landmarks[15],
-                   landmarks[12], landmarks[14], landmarks[16]]
-        avg_vis = sum(lm.get("visibility", 1) for lm in key_lms) / len(key_lms)
+        if l_vis > r_vis:
+            avg_diff = l_wrist[1] - l_shoulder[1]
+            avg_vis = l_vis
+        else:
+            avg_diff = r_wrist[1] - r_shoulder[1]
+            avg_vis = r_vis
+
         if avg_vis < 0.5:
             return {
                 "rep_count": self.rep_count, "target": self.target_reps,

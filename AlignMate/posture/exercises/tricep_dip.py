@@ -20,15 +20,17 @@ class TricepDipAnalyzer:
         r_shoulder = p(12); r_elbow = p(14); r_wrist = p(16)
         l_hip      = p(23); r_hip   = p(24)
 
-        elbow_angle = (
-            angle_between(l_shoulder, l_elbow, l_wrist) +
-            angle_between(r_shoulder, r_elbow, r_wrist)
-        ) / 2
+        # Select side with higher average visibility (left vs right)
+        l_vis = (landmarks[11].get("visibility", 1) + landmarks[13].get("visibility", 1) + landmarks[15].get("visibility", 1)) / 3
+        r_vis = (landmarks[12].get("visibility", 1) + landmarks[14].get("visibility", 1) + landmarks[16].get("visibility", 1)) / 3
 
-        # ── Visibility ────────────────────────────────────────────────────
-        key_lms = [landmarks[11], landmarks[13], landmarks[15],
-                   landmarks[12], landmarks[14], landmarks[16]]
-        avg_vis = sum(lm.get("visibility", 1) for lm in key_lms) / len(key_lms)
+        if l_vis > r_vis:
+            elbow_angle = angle_between(l_shoulder, l_elbow, l_wrist)
+            avg_vis = l_vis
+        else:
+            elbow_angle = angle_between(r_shoulder, r_elbow, r_wrist)
+            avg_vis = r_vis
+
         if avg_vis < 0.5:
             return {
                 "rep_count": self.rep_count, "target": self.target_reps,

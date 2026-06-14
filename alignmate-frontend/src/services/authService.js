@@ -10,6 +10,7 @@ export const registerUser = async (data) => {
     const res = await fetch(`${API}/register`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body:    JSON.stringify({
         name:     data.name,
         email:    data.email,
@@ -39,6 +40,7 @@ export const loginUser = async (data) => {
     const res = await fetch(`${API}/login`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body:    JSON.stringify({
         email:    data.email,
         password: data.password,
@@ -54,7 +56,7 @@ export const loginUser = async (data) => {
       };
     }
 
-    // ✅ Save full user (including profile) to localStorage for session persistence
+    // Save full user (including profile) to localStorage for offline cache
     localStorage.setItem("currentUser", JSON.stringify(json.user));
 
     return { success: true, user: json.user };
@@ -70,7 +72,35 @@ export const getCurrentUser = () => {
   return stored ? JSON.parse(stored) : null;
 };
 
+// ── GET CURRENT USER FROM SERVER (SECURE) ──────────────────────────────────────
+export const getCurrentUserFromServer = async () => {
+  try {
+    const res = await fetch(`${API}/me`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (json.success && json.user) {
+      localStorage.setItem("currentUser", JSON.stringify(json.user));
+      return json.user;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 // ── LOGOUT ────────────────────────────────────────────────────────────────────
-export const logoutUser = () => {
+export const logoutUser = async () => {
   localStorage.removeItem("currentUser");
+  try {
+    await fetch(`${API}/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch (e) {
+    console.warn("Logout request failed", e);
+  }
 };

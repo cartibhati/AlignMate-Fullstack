@@ -28,6 +28,12 @@ jobs:
         run: |
           python -m compileall AlignMate/
 
+      - name: Run Backend Tests
+        run: |
+          python -m pytest AlignMate/
+        env:
+          DATABASE_URL: sqlite:///test.db
+
   frontend-ci:
     name: Frontend Lint and Build
     runs-on: ubuntu-latest
@@ -52,3 +58,21 @@ jobs:
         run: npm run build
         env:
           VITE_API_URL: http://localhost:8000
+
+  docker-build-ci:
+    name: Docker Build Compilation Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        run: |
+          docker build -t alignmate-backend-test ./AlignMate
+
+      - name: Build Frontend Docker Image
+        run: |
+          docker build -t alignmate-frontend-test ./alignmate-frontend

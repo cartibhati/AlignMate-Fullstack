@@ -32,19 +32,19 @@ export default function PostureScoreRing({ score = 0 }) {
 
   const color =
     animatedScore > 70
-      ? "#16a34a" // green
+      ? "#22c55e" // vibrant emerald green
       : animatedScore > 40
-      ? "#f59e0b" // yellow
-      : "#dc2626"; // red
+      ? "#eab308" // yellow
+      : "#ef4444"; // red
 
   return (
-  <div className="relative flex flex-col items-center justify-center p-4 border rounded-lg bg-white">
+    <div className="relative flex flex-col items-center justify-center p-5 border border-border rounded-2xl bg-card shadow-sm hover:border-primary/20 transition-all duration-300">
       
       <svg height={radius * 2} width={radius * 2}>
         
         {/* Background circle */}
         <circle
-          stroke="#e5e7eb"
+          className="text-muted/50 stroke-muted"
           fill="transparent"
           strokeWidth={stroke}
           r={normalizedRadius}
@@ -71,11 +71,11 @@ export default function PostureScoreRing({ score = 0 }) {
       </svg>
 
       {/* Text inside */}
-      <div className="absolute flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold">
+      <div className="absolute flex flex-col items-center justify-center mt-1">
+        <span className="text-2xl font-black font-display text-foreground leading-none">
           {animatedScore}%
         </span>
-        <span className="text-xs text-gray-500">
+        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mt-1.5">
           {animatedScore > 70
             ? "Good"
             : animatedScore > 40

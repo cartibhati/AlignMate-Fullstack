@@ -28,6 +28,14 @@ export default function useVoiceAlert(mode = "student") {
     const now = Date.now();
     if (now - lastSpokenRef.current < COOLDOWN_MS) return;
 
+    const saved = localStorage.getItem("alignmate_voice_settings");
+    let settings = { rate: 0.95, pitch: 1.0, volume: 1.0, voiceName: "" };
+    if (saved) {
+      try {
+        settings = JSON.parse(saved);
+      } catch (e) {}
+    }
+
     const messages = VOICE_MESSAGES[mode] || VOICE_MESSAGES.student;
     const text     = messages[status];
     if (!text) return;
@@ -35,9 +43,18 @@ export default function useVoiceAlert(mode = "student") {
     window.speechSynthesis.cancel();
 
     const utterance      = new SpeechSynthesisUtterance(text);
-    utterance.rate       = 0.95;
-    utterance.pitch      = 1;
-    utterance.volume     = 1;
+    utterance.rate       = settings.rate ?? 0.95;
+    utterance.pitch      = settings.pitch ?? 1.0;
+    utterance.volume     = settings.volume ?? 1.0;
+
+    if (settings.voiceName && window.speechSynthesis.getVoices) {
+      const voices = window.speechSynthesis.getVoices();
+      const selectedVoice = voices.find(v => v.name === settings.voiceName);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+    }
+
     utteranceRef.current = utterance;
 
     window.speechSynthesis.speak(utterance);

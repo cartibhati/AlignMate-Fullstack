@@ -21,11 +21,28 @@ class DeadliftAnalyzer:
         l_knee     = p(25); r_knee     = p(26)
         l_ankle    = p(27); r_ankle    = p(28)
 
-        # Hip angle = angle at hip between shoulder-hip-knee
-        hip_angle = (
-            angle_between(l_shoulder, l_hip, l_knee) +
-            angle_between(r_shoulder, r_hip, r_knee)
-        ) / 2
+        # Select side with higher average visibility (left vs right)
+        l_vis = (landmarks[11].get("visibility", 1) + landmarks[23].get("visibility", 1) + landmarks[25].get("visibility", 1)) / 3
+        r_vis = (landmarks[12].get("visibility", 1) + landmarks[24].get("visibility", 1) + landmarks[26].get("visibility", 1)) / 3
+
+        if l_vis > r_vis:
+            hip_angle = angle_between(l_shoulder, l_hip, l_knee)
+            avg_vis = l_vis
+        else:
+            hip_angle = angle_between(r_shoulder, r_hip, r_knee)
+            avg_vis = r_vis
+
+        if avg_vis < 0.5:
+            return {
+                "rep_count":   self.rep_count,
+                "target":      self.target_reps,
+                "phase":       "idle",
+                "angle":       round(hip_angle, 1),
+                "angle_label": "Hip angle",
+                "feedback":    ["Adjust camera — full body needs to be visible in side view"],
+                "form_ok":     False,
+                "completed":   False,
+            }
 
         # ── Phase detection ───────────────────────────────────────────────
         if hip_angle < self.HINGE_ANGLE and self.phase in ["idle", "up"]:

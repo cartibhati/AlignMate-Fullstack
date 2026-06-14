@@ -21,16 +21,16 @@ class SquatAnalyzer:
         l_hip   = p(23); l_knee = p(25); l_ankle = p(27)
         r_hip   = p(24); r_knee = p(26); r_ankle = p(28)
 
-        knee_angle = (
-            angle_between(l_hip, l_knee, l_ankle) +
-            angle_between(r_hip, r_knee, r_ankle)
-        ) / 2
+        # Select side with higher average visibility (left vs right)
+        l_vis = (landmarks[23].get("visibility", 1) + landmarks[25].get("visibility", 1) + landmarks[27].get("visibility", 1)) / 3
+        r_vis = (landmarks[24].get("visibility", 1) + landmarks[26].get("visibility", 1) + landmarks[28].get("visibility", 1)) / 3
 
-        # ── Visibility check ──────────────────────────────────────────────
-        # If key landmarks not visible, warn user
-        key_lms = [landmarks[23], landmarks[25], landmarks[27],
-                   landmarks[24], landmarks[26], landmarks[28]]
-        avg_vis = sum(lm.get("visibility", 1) for lm in key_lms) / len(key_lms)
+        if l_vis > r_vis:
+            knee_angle = angle_between(l_hip, l_knee, l_ankle)
+            avg_vis = l_vis
+        else:
+            knee_angle = angle_between(r_hip, r_knee, r_ankle)
+            avg_vis = r_vis
 
         if avg_vis < 0.5:
             return {

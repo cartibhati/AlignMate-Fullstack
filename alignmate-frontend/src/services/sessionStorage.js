@@ -19,6 +19,7 @@ export async function saveSession(email, session) {
     const res = await fetch(`${API}/sessions`, {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "include",
       body:    JSON.stringify({
         user_id:      user.id,
         duration:     Math.round(session.duration    ?? 0),
@@ -45,7 +46,9 @@ export async function getSessions(email) {
   if (!user?.id) return _getFromLS(email);
 
   try {
-    const res  = await fetch(`${API}/sessions/${user.id}`);
+    const res  = await fetch(`${API}/sessions/${user.id}`, {
+      credentials: "include",
+    });
     if (!res.ok) throw new Error("API error");
     return await res.json();
   } catch (e) {

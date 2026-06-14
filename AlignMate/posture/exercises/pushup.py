@@ -22,15 +22,16 @@ class PushupAnalyzer:
         l_hip      = p(23); r_hip   = p(24)
         l_ankle    = p(27); r_ankle = p(28)
 
-        elbow_angle = (
-            angle_between(l_shoulder, l_elbow, l_wrist) +
-            angle_between(r_shoulder, r_elbow, r_wrist)
-        ) / 2
+        # Select side with higher average visibility (left vs right)
+        l_vis = (landmarks[11].get("visibility", 1) + landmarks[13].get("visibility", 1) + landmarks[15].get("visibility", 1)) / 3
+        r_vis = (landmarks[12].get("visibility", 1) + landmarks[14].get("visibility", 1) + landmarks[16].get("visibility", 1)) / 3
 
-        # ── Visibility check ──────────────────────────────────────────────
-        key_lms = [landmarks[11], landmarks[13], landmarks[15],
-                   landmarks[12], landmarks[14], landmarks[16]]
-        avg_vis = sum(lm.get("visibility", 1) for lm in key_lms) / len(key_lms)
+        if l_vis > r_vis:
+            elbow_angle = angle_between(l_shoulder, l_elbow, l_wrist)
+            avg_vis = l_vis
+        else:
+            elbow_angle = angle_between(r_shoulder, r_elbow, r_wrist)
+            avg_vis = r_vis
 
         if avg_vis < 0.5:
             return {
@@ -50,7 +51,7 @@ class PushupAnalyzer:
         avg_ankle_y    = (l_ankle[1]    + r_ankle[1])    / 2
 
         body_range     = abs(avg_ankle_y - avg_shoulder_y)
-        in_position    = body_range < 0.30  # horizontal body = small Y range
+        in_position    = body_range < 0.35  # horizontal body = small Y range
 
         # ── Phase detection ───────────────────────────────────────────────
         if in_position:
