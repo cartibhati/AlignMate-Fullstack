@@ -15,6 +15,7 @@ venv/
 # ML / Data
 # =========================
 *.pkl
+!AlignMate/posture_model_v3.pkl
 *.csv
 
 # =========================
