@@ -1,10 +1,10 @@
 # AlignMate/ai_feedback.py
 
 import random
-from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
+from llm_provider import get_llm
 
-llm = OllamaLLM(model="llama3.2")
+llm = get_llm()
 
 # ── Varied prompt templates ───────────────────────────────────────────────────
 # Multiple templates so the AI doesn't produce the same structure every time
@@ -86,7 +86,8 @@ def get_ai_feedback(
             "session_duration": session_duration,
             "issues":           issues_str,
         })
-        return result.strip()
+        text = result.content if hasattr(result, "content") else result
+        return text.strip()
     except Exception as e:
         print(f"[WARNING] Ollama model error ({e}). Generating rule-based feedback fallback...")
         if score > 75:

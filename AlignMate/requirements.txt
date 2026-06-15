@@ -9,6 +9,7 @@ uvicorn
 websockets
 langchain
 langchain-ollama
+langchain-google-genai
 sqlmodel
 pymysql
 passlib[bcrypt]

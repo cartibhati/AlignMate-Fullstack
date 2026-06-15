@@ -1,10 +1,10 @@
 # AlignMate/workout_planner.py
 
 import random
-from langchain_ollama import OllamaLLM
 from langchain_core.prompts import PromptTemplate
+from llm_provider import get_llm
 
-llm = OllamaLLM(model="llama3.2", temperature=0.8)
+llm = get_llm(temperature=0.8)
 
 PLAN_TEMPLATE = """
 You are an expert fitness coach and nutritionist at AlignMate.
@@ -118,7 +118,8 @@ def generate_plan(
         })
 
         import json, re
-        text = result.strip()
+        text = result.content if hasattr(result, "content") else result
+        text = text.strip()
         text = re.sub(r"```json\s*", "", text)
         text = re.sub(r"```\s*",     "", text)
 
