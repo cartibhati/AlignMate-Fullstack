@@ -87,6 +87,16 @@ def get_ai_feedback(
             "issues":           issues_str,
         })
         text = result.content if hasattr(result, "content") else result
+        if isinstance(text, list):
+            parsed_parts = []
+            for part in text:
+                if isinstance(part, dict) and "text" in part:
+                    parsed_parts.append(part["text"])
+                elif hasattr(part, "text"):
+                    parsed_parts.append(part.text)
+                elif isinstance(part, str):
+                    parsed_parts.append(part)
+            text = "".join(parsed_parts)
         return text.strip()
     except Exception as e:
         print(f"[WARNING] Ollama model error ({e}). Generating rule-based feedback fallback...")

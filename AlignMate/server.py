@@ -30,8 +30,12 @@ origins = [
     "http://127.0.0.1:5174",
     "https://arjuns.tech",
     "https://www.arjuns.tech",
+    "http://arjuns.tech",
+    "http://www.arjuns.tech",
     "https://alignmate.in",
     "https://www.alignmate.in",
+    "http://alignmate.in",
+    "http://www.alignmate.in",
 ]
 
 allowed_origins_env = os.environ.get("ALLOWED_ORIGINS")

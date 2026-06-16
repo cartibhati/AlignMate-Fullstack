@@ -119,6 +119,16 @@ def generate_plan(
 
         import json, re
         text = result.content if hasattr(result, "content") else result
+        if isinstance(text, list):
+            parsed_parts = []
+            for part in text:
+                if isinstance(part, dict) and "text" in part:
+                    parsed_parts.append(part["text"])
+                elif hasattr(part, "text"):
+                    parsed_parts.append(part.text)
+                elif isinstance(part, str):
+                    parsed_parts.append(part)
+            text = "".join(parsed_parts)
         text = text.strip()
         text = re.sub(r"```json\s*", "", text)
         text = re.sub(r"```\s*",     "", text)
