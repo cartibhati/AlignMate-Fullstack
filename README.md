@@ -3,7 +3,7 @@
 # 🏋️ AlignMate
 
 **Real-time posture detection & athletic performance web app**
-
+ 
 ![Python](https://img.shields.io/badge/Python-3.10-blue?style=flat-square&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green?style=flat-square&logo=fastapi)
 ![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
