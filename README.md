@@ -1,5 +1,5 @@
 <div align="center">
-
+ 
 # 🏋️ AlignMate
 
 **Real-time posture detection & athletic performance web app**
